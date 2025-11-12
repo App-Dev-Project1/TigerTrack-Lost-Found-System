@@ -1,0 +1,49 @@
+/* Make the whole page unscrollable */
+.dispute-comingsoon-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url('/images/admin-bg.jpg') center/cover no-repeat; /* optional */
+}
+
+/* Blur overlay */
+.dispute-blur-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.15);
+  z-index: 1;
+}
+
+/* Centered box */
+.dispute-content {
+  position: absolute;
+  top: 250px;
+  z-index: 2;
+  text-align: center;
+  color: #333;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 80px 120px;
+  border-radius: 30px; 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  backdrop-filter: blur(8px);
+  max-width: 800px; 
+}
+
+/* Title */
+.dispute-content h1 {
+  font-size: 2rem; /* bigger text */
+  font-weight: 800;
+  color: #ff9900;
+  margin-bottom: 20px;
+}
+
+/* Subtitle */
+.dispute-content p {
+  font-size: 1.3rem;
+  color: #444;
+  font-weight: 500;
+}

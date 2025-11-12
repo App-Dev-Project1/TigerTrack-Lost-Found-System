@@ -1,0 +1,408 @@
+/* =========================================================
+   GLOBAL STYLES
+========================================================= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
+.admin-container {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8edf2 100%);
+}
+
+/* =========================================================
+   SIDEBAR - ENHANCED CRIMSON THEME
+========================================================= */
+.sidebar {
+  width: 260px;
+  background: linear-gradient(180deg, #a01010 0%, #6b0000 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sidebar-logo {
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-logo h4 {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-logo p {
+  margin: 8px 0 0 0;
+  font-size: 20px;
+  opacity: 0.95;
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.tiger-logo {
+  width: 90px;
+  height: 95px;
+  margin: 20px auto 0;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.nav-item {
+  width: 100%;
+  padding: 16px 28px;
+  background: transparent;
+  color: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid transparent;
+  position: relative;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: rgba(255, 255, 255, 0.1);
+  transition: width 0.3s ease;
+}
+
+.nav-item:hover::before {
+  width: 100%;
+}
+
+.nav-item:hover {
+  border-left: 4px solid rgba(255, 255, 255, 0.6);
+  transform: translateX(2px);
+}
+
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.18);
+  border-left: 4px solid #ffffff;
+  font-weight: 600;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item.active::before {
+  width: 100%;
+}
+
+.sidebar-logout {
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.logout-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 14px 18px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
+.main-content {
+  margin-left: 260px;
+  flex: 1;
+  padding: 40px 50px;
+  max-width: 1600px;
+}
+
+/* =========================================================
+   DASHBOARD VIEW - ENHANCED DESIGN
+========================================================= */
+.dashboard-view h1 {
+  font-size: 44px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: #1a1a2e;
+  letter-spacing: -1px;
+}
+
+.dashboard-subtitle {
+  font-size: 17px;
+  color: #64748b;
+  margin-bottom: 35px;
+  font-weight: 500;
+}
+
+/* Stats Cards Container */
+.dashboard-stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 35px;
+}
+
+/* Enhanced Stat Cards */
+.stat-card {
+  background: white;
+  padding: 32px 28px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.14);
+}
+
+.stat-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.15) rotate(5deg);
+}
+
+/* Card Color Variants */
+.stat-card.total {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.stat-card.pending {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+}
+
+.stat-card.resolved {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: #064e3b;
+}
+
+.stat-card h3 {
+  font-size: 42px;
+  font-weight: 800;
+  margin: 12px 0 8px;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.stat-card.total h3,
+.stat-card.total p {
+  color: white;
+}
+
+.stat-card p {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  opacity: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+}
+
+/* =========================================================
+   RECENT ACTIVITY BOX - ENHANCED
+========================================================= */
+.recent-activity-box {
+  background: white;
+  padding: 32px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
+}
+
+.recent-activity-box:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.recent-activity-box h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.recent-activity-box p {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: #475569;
+  line-height: 1.7;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.recent-activity-box p:hover {
+  background: #f1f5f9;
+  border-left-color: #8B0000;
+  transform: translateX(4px);
+}
+
+.recent-activity-box p:last-child {
+  margin-bottom: 0;
+}
+
+.recent-activity-box a {
+  color: #8B0000;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.recent-activity-box a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #8B0000;
+  transition: width 0.3s ease;
+}
+
+.recent-activity-box a:hover {
+  color: #a01010;
+}
+
+.recent-activity-box a:hover::after {
+  width: 100%;
+}
+
+/* =========================================================
+   RESPONSIVE DESIGN
+========================================================= */
+@media (max-width: 1200px) {
+  .dashboard-stats-container {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 220px;
+  }
+  
+  .main-content {
+    margin-left: 220px;
+    padding: 30px 25px;
+  }
+  
+  .dashboard-view h1 {
+    font-size: 32px;
+  }
+  
+  .dashboard-stats-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: 20px;
+  }
+}
