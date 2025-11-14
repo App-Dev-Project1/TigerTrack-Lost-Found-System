@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+body, .admin-login-page, .admin-login-card, .admin-login-header, .admin-login-body {
+  font-family: 'Poppins', sans-serif;
+}
+
 /* PAGE BACKGROUND */
 .admin-login-page {
   min-height: 100vh;
@@ -21,21 +27,15 @@
   bottom: -250px;
   left: -400px;
   z-index: 1;
-  animation: pulse 8s ease-in-out infinite;
+  animation: pulse 10s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.8;
-  }
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
 }
 
-/* LEFT SIDE - WELCOME SECTION WITH TIGER LOGO - CENTERED */
+/* LEFT SIDE - WELCOME SECTION WITH TIGER LOGO */
 .admin-login-left {
   position: absolute;
   left: clamp(5%, 25%, 25%);
@@ -49,7 +49,6 @@
   text-align: center;
 }
 
-/* Tiger Logo - Now on Left Side and Centered */
 .admin-tiger-logo {
   width: clamp(180px, 22vw, 350px);
   height: clamp(180px, 22vw, 350px);
@@ -59,12 +58,8 @@
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
 
 .admin-welcome-text {
@@ -83,14 +78,8 @@
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .admin-welcome-subtext {
@@ -139,6 +128,7 @@
   object-fit: contain;
 }
 
+/* BACK BUTTON */
 .admin-back-btn {
   position: absolute;
   top: 25px;
@@ -161,7 +151,7 @@
   transform: translateY(-2px);
 }
 
-/* CARD CONTAINER - With Red Header */
+/* CARD CONTAINER */
 .admin-login-card {
   width: 100%;
   max-width: clamp(400px, 42vw, 650px);
@@ -178,24 +168,17 @@
 }
 
 @keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-/* HEADER - Red Background */
+/* HEADER */
 .admin-login-header {
   background: linear-gradient(135deg, #8B0000 0%, #A52A2A 60%, #B22222 100%);
   padding: clamp(25px, 2.5vw, 35px) 20px;
   text-align: center;
 }
 
-/* TITLE in Header */
 .admin-login-heading {
   text-align: center;
   font-weight: 800;
@@ -220,17 +203,7 @@
   padding: clamp(30px, 3vw, 40px) clamp(30px, 3.5vw, 50px);
 }
 
-.admin-login-heading-container {
-  text-align: center;
-  margin-bottom: 25px;
-  display: none;
-}
-
 /* FORM INPUTS */
-.form-group {
-  margin-bottom: 20px;
-}
-
 .admin-login-label {
   font-weight: 600;
   font-size: clamp(12px, 1vw, 14px);
@@ -254,8 +227,25 @@
   box-shadow: 0 0 0 3px rgba(153, 0, 0, 0.1);
 }
 
-.admin-login-input::placeholder {
-  color: #aaa;
+/* PASSWORD EYE ICON */
+.admin-input-container {
+  position: relative;
+}
+
+.admin-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-eye-icon {
+  position: absolute;
+  right: 12px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* LOGIN BUTTON */
@@ -282,17 +272,7 @@
   transform: translateY(0);
 }
 
-.admin-login-button:focus,
-.admin-login-button:focus-visible,
-.btn:focus,
-.btn:focus-visible,
-.admin-login-button::-moz-focus-inner {
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-/* DEV NOTE BOX */
+/* NOTE BOX */
 .admin-login-note {
   margin-top: 20px;
   padding: clamp(12px, 1.2vw, 15px);
@@ -310,95 +290,71 @@
   border-radius: 8px;
 }
 
-/* RESPONSIVE - Only adjust for very small screens */
-@media (max-width: 1200px) {
-  .admin-login-page {
-    padding: 40px 60px;
-  }
+/* SUCCESS POPUP */
+.admin-success-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 25px;
+  padding: 40px 50px;
+  text-align: center;
+  z-index: 5000;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+  animation: popupScale 0.7s ease-out;
+}
 
-  .admin-login-left {
-    left: 20%;
-    max-width: 450px;
-  }
+.admin-success-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+}
+
+.admin-success-popup h3 {
+  color: #00b300;
+  margin: 0;
+  font-weight: 700;
+}
+
+@keyframes popupScale {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  70% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* --------------------------------- */
+/* RESPONSIVE STYLES (KEEPING ORIGINAL FULL) */
+/* --------------------------------- */
+@media (max-width: 1200px) {
+  .admin-login-page { padding: 40px 60px; }
+  .admin-login-left { left: 20%; max-width: 450px; }
 }
 
 @media (max-width: 992px) {
-  .admin-login-page {
-    justify-content: center;
-    padding: 40px;
-  }
-
-  .admin-login-left {
-    display: none;
-  }
-
-  .cics-circle-container {
-    top: 20px;
-    right: 20px;
-  }
-
-  .admin-login-card {
-    max-width: 540px;
-    position: relative;
-    right: auto;
-  }
-
-  .admin-login-page::before,
-  .admin-login-page::after {
-    opacity: 0.5;
-  }
+  .admin-login-page { justify-content: center; padding: 40px; }
+  .admin-login-left { display: none; }
+  .cics-circle-container { top: 20px; right: 20px; }
+  .admin-login-card { max-width: 540px; position: relative; right: auto; }
+  .admin-login-page::before, .admin-login-page::after { opacity: 0.5; }
 }
 
 @media (max-width: 768px) {
-  .admin-login-card {
-    max-width: 480px;
-  }
-
-  .admin-login-header {
-    padding: 30px 20px;
-  }
-
-  .admin-login-body {
-    padding: 35px 30px;
-  }
+  .admin-login-card { max-width: 480px; }
+  .admin-login-header { padding: 30px 20px; }
+  .admin-login-body { padding: 35px 30px; }
 }
 
 @media (max-width: 480px) {
-  .admin-login-page {
-    padding: 20px;
-  }
-
-  .admin-login-card {
-    border-radius: 20px;
-  }
-
-  .admin-login-header {
-    padding: 25px 15px;
-  }
-
-  .admin-login-body {
-    padding: 30px 25px;
-  }
-
-  .admin-back-btn {
-    top: 15px;
-    left: 15px;
-    padding: 8px 14px;
-    font-size: 14px;
-  }
-
-  .cics-circle-container {
-    top: 15px;
-    right: 15px;
-  }
+  .admin-login-page { padding: 20px; }
+  .admin-login-card { border-radius: 20px; }
+  .admin-login-header { padding: 25px 15px; }
+  .admin-login-body { padding: 30px 25px; }
+  .admin-back-btn { top: 15px; left: 15px; padding: 8px 14px; font-size: 14px; }
+  .cics-circle-container { top: 15px; right: 15px; }
 }
 
 @media (max-width: 380px) {
-  .admin-login-body {
-    padding: 25px 20px;
-  }
-
-  .admin-login-header {
-    padding: 20px 15px;
-  }
+  .admin-login-body { padding: 25px 20px; }
+  .admin-login-header { padding: 20px 15px; }
 }

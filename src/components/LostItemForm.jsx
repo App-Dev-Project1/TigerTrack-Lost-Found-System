@@ -24,15 +24,53 @@ const LostItemForm = () => {
     description: '',
   });
 
+  const handleFormattedContact = (e) => {
+  let input = e.target.value;
+
+  // Remove all non-digits first
+  let digits = input.replace(/\D/g, "");
+
+  // Allow deleting everything
+  if (digits.length === 0) {
+    setFormData({ ...formData, contactNumber: "" });
+    return;
+  }
+
+  // Limit to 11 digits max
+  digits = digits.substring(0, 11);
+
+  // Build format 09XX-XXX-XXXX
+  let formatted = "";
+
+  if (digits.length <= 4) {
+    formatted = digits; 
+  } else if (digits.length <= 7) {
+    formatted = digits.substring(0, 4) + "-" + digits.substring(4);
+  } else {
+    formatted =
+      digits.substring(0, 4) +
+      "-" +
+      digits.substring(4, 7) +
+      "-" +
+      digits.substring(7, 11);
+  }
+
+  setFormData({
+    ...formData,
+    contactNumber: formatted,
+  });
+};
+
+
   const categories = [
     'Electronics', 'Bags & Backpacks', 'Books & Notebooks',
     'Clothing & Accessories', 'ID Cards & Documents', 'Keys',
-    'Water Bottles & Containers', 'Umbrellas', 'Others'
+    'Water Bottles & Containers', 'Umbrellas'
   ];
 
   const occupancies = ['Student', 'Faculty', 'Staff'];
   const floors = ['17th Floor', '18th Floor', '19th Floor', '20th Floor'];
-  const locations = ['Room', 'Hallway', 'Bathroom', 'Fire Exit', 'Lobby', 'Other'];
+  const locations = ['Room', 'Hallway', 'Bathroom', 'Fire Exit', 'Lobby', 'Others'];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,7 +89,7 @@ const LostItemForm = () => {
       return;
     }
 
-    if ((formData.location === 'Room' || formData.location === 'Other') && !formData.specificLocation) {
+    if ((formData.location === 'Room' || formData.location === 'Others') && !formData.specificLocation) {
       alert('Please specify the exact location.');
       return;
     }
@@ -62,28 +100,29 @@ const LostItemForm = () => {
       return;
     }
 
-    const phoneRegex = /^[0-9]{10,13}$/;
-    if (!phoneRegex.test(formData.contactNumber.replace(/\s/g, ''))) {
-      alert('Please enter a valid contact number');
-      return;
-    }
-    // --- End of validation ---
-
 
     // --- 3. START SUPABASE LOGIC (FIXED) ---
     try {
-      const finalLocation = (formData.location === 'Room' || formData.location === 'Other') && formData.specificLocation
-        ? `${formData.location}: ${formData.specificLocation}`
-        : formData.location;
+      // --- FIXED LOCATION ---
+      const finalLocation = 
+        (formData.location === 'Room' || formData.location === 'Others') && formData.specificLocation
+          ? `${formData.location}: ${formData.specificLocation}`
+          : formData.location;
+
+      // --- NEW: CUSTOM CATEGORY HANDLING ---
+      const finalCategory =
+        formData.category === 'Others' && formData.specificCategory
+          ? `Others: ${formData.specificCategory}`
+          : formData.category;
 
       const { data, error } = await supabase
         .from('lost_items')
         .insert([
           {
-            owner_name: formData.ownerName, // <-- SAVES "Rafael"
-            name: formData.itemName,       // <-- SAVES "White iPhone 13"
-            occupation: formData.occupancy,  // <-- SAVES "Student"
-            category: formData.category,
+            owner_name: formData.ownerName,
+            name: formData.itemName,
+            occupation: formData.occupancy,
+            category: finalCategory, 
             floor: formData.floor,
             location: finalLocation,
             lost_date: formData.date,
@@ -146,7 +185,14 @@ const LostItemForm = () => {
 
               <Form.Group className="mb-3">
                 <Form.Label>Name of the Owner</Form.Label>
-                <Form.Control name="ownerName" value={formData.ownerName} onChange={handleChange} required />
+                <Form.Control 
+                  type="text"
+                  placeholder="Enter full name"
+                  name="ownerName" 
+                  value={formData.ownerName} 
+                  onChange={handleChange} 
+                  required 
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">
@@ -159,16 +205,47 @@ const LostItemForm = () => {
 
               <Form.Group className="mb-3">
                 <Form.Label>What item did you lose?</Form.Label>
-                <Form.Control name="itemName" value={formData.itemName} onChange={handleChange} required />
+                <Form.Control 
+                  type="text"
+                  placeholder="Enter item name"
+                  name="itemName" 
+                  value={formData.itemName} 
+                  onChange={handleChange} 
+                  required 
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>Category of your Item</Form.Label>
-                <Form.Select name="category" value={formData.category} onChange={handleChange} required>
-                  <option value="">Select a category</option>
-                  {categories.map((c, i) => <option key={i}>{c}</option>)}
-                </Form.Select>
-              </Form.Group>
+                  <Form.Label>Category of your Item</Form.Label>
+                  <Form.Select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((c, i) => (
+                      <option key={i} value={c}>{c}</option>
+                    ))}
+                    <option value="Others">Others</option>
+                  </Form.Select>
+                </Form.Group>
+
+                {formData.category === 'Others' && (
+                  <Form.Group className="mb-3">
+                    <Form.Label>Please specify the other category</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="specificCategory"
+                      placeholder="Enter the category"
+                      value={formData.specificCategory || ''}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, specificCategory: e.target.value }))
+                      }
+                      required
+                    />
+                  </Form.Group>
+                )}
 
               <Form.Group className="mb-3">
                 <Form.Label>What floor did you lose the item?</Form.Label>
@@ -186,10 +263,10 @@ const LostItemForm = () => {
                 </Form.Select>
               </Form.Group>
 
-              {(formData.location === 'Room' || formData.location === 'Other') && (
+               {(formData.location === 'Room' || formData.location === 'Others') && (
                 <Form.Group className="mb-3">
                   <Form.Label>
-                    {formData.location === 'Room' ? 'Please specify the room' : 'Please specify the other'}
+                    {formData.location === 'Room' ? 'Please specify the room' : 'Please specify the others'}
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -202,7 +279,7 @@ const LostItemForm = () => {
                       required
                     />
                 </Form.Group>
-              )}
+               )}
 
               <Form.Group className="mb-3">
                 <Form.Label>When did you lose it?</Form.Label>
@@ -216,17 +293,43 @@ const LostItemForm = () => {
 
               <Form.Group className="mb-3">
                 <Form.Label>What is your contact email?</Form.Label>
-                <Form.Control type="email" name="contactEmail" value={formData.contactEmail} onChange={handleChange} required />
+                <Form.Control 
+                  type="email"
+                  placeholder="Enter valid email"
+                  name="contactEmail"
+                  value={formData.contactEmail}
+                  onChange={handleChange}
+                  required
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>What is your contact number?</Form.Label>
-                <Form.Control name="contactNumber" value={formData.contactNumber} onChange={handleChange} required />
+                <Form.Control
+                  type="text"
+                  placeholder="09XX-XXX-XXXX"
+                  name="contactNumber"
+                  value={formData.contactNumber}
+                  onChange={handleFormattedContact}
+                  maxLength={13}
+                  pattern="^09\d{2}-\d{3}-\d{4}$"
+                  required
+                />
+                <Form.Control.Feedback type="invalid">
+                  Please enter a valid Philippine mobile number.
+                </Form.Control.Feedback>
               </Form.Group>
 
               <Form.Group className="mb-3 form-full-width">
                 <Form.Label>Describe your item (Optional)</Form.Label>
-                <Form.Control as="textarea" rows={3} name="description" value={formData.description} onChange={handleChange} />
+                <Form.Control 
+                  as="textarea" 
+                  rows={3}
+                  placeholder="Describe the item (color, shape, size, brand, unique marks, etc.)"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                />
               </Form.Group>
 
             </div>

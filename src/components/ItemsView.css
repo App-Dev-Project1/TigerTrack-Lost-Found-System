@@ -38,7 +38,6 @@
   background: #a50000;
 }
 
-/* Search and Filter Section */
 .search-filter-section {
   display: flex;
   gap: 16px;
@@ -122,6 +121,29 @@
   overflow: hidden;
 }
 
+/*
+ *
+ * --- THIS IS THE FIX ---
+ * I moved these rules OUTSIDE of the media query
+ *
+ */
+.table {
+  /* This forces the table to use a fixed width and not
+     resize based on the content of every cell. */
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table td {
+  /* This group of properties will handle the long text
+     like "Others: ..." */
+  white-space: nowrap;      /* Prevents the text from wrapping to a new line */
+  overflow: hidden;         /* Hides any text that overflows the cell */
+  text-overflow: ellipsis;  /* Adds the '...' at the end */
+}
+/* --- END OF FIX --- */
+
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -129,12 +151,52 @@
 
 .table th {
   padding: 20px 24px;
-  text-align: left;
+  text-align: center;
   font-size: 13px;
   font-weight: 700;
   color: #475569;
   background: #f8fafc;
   border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 20px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.table th:first-child,
+.table td:first-child {
+  width: 90px;
+  padding-left: 36px;
+  padding-right: 36px;
+}
+
+.table td:first-child input[type="checkbox"] {
+  display: block;
+  margin: auto;
+}
+
+.table th:last-child,
+.table td:last-child {
+  width: 120px;
+  padding-left: 36px;
+  padding-right: 36px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  text-align: left;
 }
 
 .sortable-header {
@@ -147,17 +209,9 @@
   background: #f1f5f9;
 }
 
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
 .sort-arrows {
   display: flex;
   flex-direction: column;
-  gap: -4px;
   margin-left: 4px;
 }
 
@@ -170,14 +224,6 @@
   color: #8b0000;
 }
 
-.table td {
-  padding: 20px 24px;
-  font-size: 14px;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-/* ✅ Checkbox styling */
 .checkbox-no-animation {
   width: 18px;
   height: 18px;
@@ -194,7 +240,6 @@
   transform: none !important;
 }
 
-/* ✅ Selected rows */
 .selected-row-lost {
   background-color: #fee2e2;
 }
@@ -203,14 +248,12 @@
   background-color: #d1fae5;
 }
 
-/* ✅ Blur other rows */
 .blurred-row {
   filter: blur(3px);
   opacity: 0.5;
   pointer-events: none;
 }
 
-/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
@@ -244,7 +287,6 @@
   color: #1e293b;
 }
 
-/* View Button */
 .view-btn {
   background: white;
   border: 1.5px solid #8b0000;
@@ -267,7 +309,6 @@
   box-shadow: 0 2px 8px rgba(139, 0, 0, 0.2);
 }
 
-/* Modal Overlay - Floating Window */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -295,7 +336,6 @@
 
 .modal-content {
   background: white !important;
-  background-color: #ffffff !important;
   border-radius: 16px;
   padding: 32px;
   max-width: 600px;
@@ -413,7 +453,6 @@
 }
 
 .modal-field-full label {
-  display: block;
   font-size: 11px;
   font-weight: 700;
   color: #64748b;
@@ -440,7 +479,6 @@
   border: 1px solid #e2e8f0;
 }
 
-/* Scrollbar styling for modal */
 .modal-content::-webkit-scrollbar {
   width: 8px;
 }
@@ -459,26 +497,24 @@
   background: #94a3b8;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .modal-body-with-photo {
     flex-direction: column;
   }
-  
+
   .modal-right {
     width: 100%;
   }
-  
+
   .modal-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .modal-content {
     padding: 24px;
   }
 }
 
-/* Confirm Match Modal */
 .modal-content-match {
   max-width: 1200px;
 }
@@ -623,190 +659,11 @@
   .match-comparison {
     grid-template-columns: 1fr;
   }
-  
+
   .modal-content-match {
     max-width: 600px;
   }
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4) !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    padding: 20px;
-    backdrop-filter: blur(3px);
-    animation: fadeIn 0.2s ease;
-}
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-.modal-content {
-    background: #ffffff !important;
-    border-radius: 16px;
-    /* Adjusted padding and max-width for screenshot look */
-    padding: 28px 32px;
-    max-width: 550px; 
-    width: 100%;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    animation: slideUp 0.3s ease;
-    position: relative;
-    opacity: 1 !important;
-}
-
-.modal-content-wide {
-    max-width: 1000px;
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(30px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-/* --- HEADER & CLOSE BUTTON --- */
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-}
-
-.modal-header h3 {
-    font-size: 26px;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-}
-
-.modal-subtitle {
-    color: #64748b;
-    font-size: 14px;
-    margin-bottom: 24px; /* Adjusted margin */
-    margin-top: 4px;
-}
-
-.close-btn {
-    /* Style modified to match the small 'X' in the screenshot */
-    background: transparent; 
-    border: none;
-    cursor: pointer;
-    color: #64748b;
-    padding: 0; 
-    display: flex;
-    align-items: center;
-    border-radius: 0;
-    transition: all 0.2s ease;
-}
-
-.close-btn:hover {
-    background: transparent;
-    color: #8b0000;
-}
-
-/* --- MODAL BODY & GRID LAYOUT --- */
-
-.modal-body {
-    display: flex;
-    flex-direction: column;
-    gap: 18px; /* Vertical spacing between sections */
-}
-
-.modal-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    /* Tighter vertical spacing, defined horizontal spacing */
-    gap: 15px 30px; 
-}
-
-.modal-field label {
-    display: block;
-    /* Label styling optimized for the screenshot */
-    font-size: 10px; 
-    font-weight: 600; 
-    color: #8b0000; /* Theme color for label */
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 4px; 
-}
-
-.modal-field p {
-    /* Value styling optimized for the screenshot */
-    font-size: 14px;
-    color: #1e293b;
-    font-weight: 700; 
-    margin: 0;
-    line-height: 1.4;
-}
-
-/* Full-width description field */
-.modal-field-full {
-    grid-column: 1 / -1;
-}
-
-.modal-field-full label {
-    /* Inherit specific label styles */
-    font-size: 10px; 
-    font-weight: 600;
-    color: #8b0000;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 4px;
-}
-
-.modal-field-full p {
-    font-size: 14px; 
-    color: #1e293b;
-    line-height: 1.7;
-    margin: 0;
-}
-
-/* --- FOUND ITEM MODAL (photo layout) --- */
-
-.modal-body-with-photo {
-    display: flex;
-    gap: 32px;
-}
-
-.modal-left {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-.modal-right {
-    flex-shrink: 0;
-    width: 380px;
-}
-
-.item-photo {
-    width: 100%;
-    height: auto;
-    min-height: 300px;
-    border-radius: 12px;
-    object-fit: cover;
-    margin-top: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    border: 1px solid #e2e8f0;
-}
+  /* The fix was here, but it's now moved outside */
+  
 }

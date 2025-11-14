@@ -1,7 +1,7 @@
 // src/components/FoundItemForm.jsx
 
 import React, { useState, useRef } from 'react';
-import { Button, Form } from 'react-bootstrap';
+import { Button, Form, Modal, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import tigerLogo from '../assets/tiger.png';
 import './FoundItemForm.css';
@@ -14,7 +14,7 @@ const FoundItemForm = () => {
     finderName: '', 
     itemName: '',
     category: '',
-    occupancy: '', // <-- This was already in your state
+    occupancy: '',
     floor: '',
     location: '',
     specificLocation: '',
@@ -25,20 +25,62 @@ const FoundItemForm = () => {
     contactEmail: '',
   });
 
+  const handleFormattedContact = (e) => {
+  let input = e.target.value;
+
+  // Remove all non-digits first
+  let digits = input.replace(/\D/g, "");
+
+  // Allow deleting everything
+  if (digits.length === 0) {
+    setFormData({ ...formData, contactNumber: "" });
+    return;
+  }
+
+  // Limit to 11 digits max
+  digits = digits.substring(0, 11);
+
+  // Build format 09XX-XXX-XXXX
+  let formatted = "";
+
+  if (digits.length <= 4) {
+    formatted = digits; 
+  } else if (digits.length <= 7) {
+    formatted = digits.substring(0, 4) + "-" + digits.substring(4);
+  } else {
+    formatted =
+      digits.substring(0, 4) +
+      "-" +
+      digits.substring(4, 7) +
+      "-" +
+      digits.substring(7, 11);
+  }
+
+  setFormData({
+    ...formData,
+    contactNumber: formatted,
+  });
+};
+
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
   const categories = [
     'Electronics', 'Bags & Backpacks', 'Books & Notebooks',
     'Clothing & Accessories', 'ID Cards & Documents', 'Keys',
-    'Water Bottles & Containers', 'Umbrellas', 'Others',
+    'Water Bottles & Containers', 'Umbrellas'
   ];
 
   const occupancies = ['Student', 'Faculty', 'Staff'];
   const floors = ['17th Floor', '18th Floor', '19th Floor', '20th Floor'];
-  const locations = ['Room', 'Hallway', 'Bathroom', 'Fire Exit', 'Lobby', 'Other'];
+  const locations = ['Room', 'Hallway', 'Bathroom', 'Fire Exit', 'Lobby', 'Others'];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +97,8 @@ const FoundItemForm = () => {
       }
     } catch (err) {
       console.error("Camera Error:", err.name, err.message);
-      // (Error handling alerts...)
+      setErrorMessage('Unable to access camera. Please check your permissions.');
+      setShowErrorModal(true);
     }
   };
 
@@ -84,10 +127,15 @@ const FoundItemForm = () => {
     return new File([blob], fileName, { type: blob.type });
   }
 
-  // --- UPDATED handleSubmit FUNCTION ---
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorModal(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation
     if (
       !formData.finderName || 
       !formData.itemName ||
@@ -100,29 +148,25 @@ const FoundItemForm = () => {
       !formData.contactNumber ||
       !formData.contactEmail
     ) {
-      alert('Please fill in all required fields');
+      showError('Please fill in all required fields');
       return;
     }
     
-    if ((formData.location === 'Room' || formData.location === 'Other') && !formData.specificLocation) {
-      alert('Please specify the exact location.');
+    if ((formData.location === 'Room' || formData.location === 'Others') && !formData.specificLocation) {
+      showError('Please specify the exact location.');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.contactEmail)) {
-      alert('Please enter a valid email address');
+      showError('Please enter a valid email address');
       return;
     }
 
-    const phoneRegex = /^[0-9]{10,13}$/;
-    if (!phoneRegex.test(formData.contactNumber.replace(/\s/g, ''))) {
-      alert('Please enter a valid contact number');
-      return;
-    }
-
+    setIsSubmitting(true);
     let itemPhotoUrl = null;
 
+    // Upload photo if exists
     if (photoPreview) {
       try {
         const file = await dataUrlToFile(photoPreview, `item_photo_${Date.now()}.png`);
@@ -142,15 +186,23 @@ const FoundItemForm = () => {
 
       } catch (error) {
         console.error('Error uploading photo:', error);
-        alert('Error uploading photo: ' + error.message);
+        setIsSubmitting(false);
+        showError('Error uploading photo: ' + error.message);
         return;
       }
     }
 
+    // Submit to database
     try {
-      const finalLocation = (formData.location === 'Room' || formData.location === 'Other') && formData.specificLocation
-        ? `${formData.location}: ${formData.specificLocation}`
-        : formData.location;
+      const finalLocation = 
+        (formData.location === 'Room' || formData.location === 'Others') && formData.specificLocation
+          ? `${formData.location}: ${formData.specificLocation}`
+          : formData.location;
+      
+      const finalCategory =
+        formData.category === 'Others' && formData.specificCategory
+          ? `Others: ${formData.specificCategory}`
+          : formData.category;
 
       const { data, error } = await supabase
         .from('found_items')
@@ -158,8 +210,8 @@ const FoundItemForm = () => {
           {
             finder_name: formData.finderName, 
             name: formData.itemName,
-            occupation: formData.occupancy, // <-- ADDED THIS
-            category: formData.category,
+            occupation: formData.occupancy,
+            category: finalCategory, 
             floor: formData.floor,
             location: finalLocation,
             found_date: formData.date,
@@ -174,8 +226,10 @@ const FoundItemForm = () => {
         
       if (error) throw error;
 
-      alert('Your found item report has been submitted successfully!');
+      setIsSubmitting(false);
+      setShowSuccessModal(true);
 
+      // Reset form
       setFormData({
         finderName: '', 
         itemName: '',
@@ -192,11 +246,10 @@ const FoundItemForm = () => {
       });
       setPhotoPreview(null);
 
-      navigate('/');
-
     } catch (error) {
       console.error('Error submitting report:', error);
-      alert('Error submitting report: ' + error.message);
+      setIsSubmitting(false);
+      showError('Error submitting report: ' + error.message);
     }
   };
 
@@ -224,18 +277,20 @@ const FoundItemForm = () => {
             
               <Form.Group className="mb-3">
                 <Form.Label>Name of the Finder</Form.Label>
-                <Form.Control
-                  name="finderName" // <-- Fixed
-                  value={formData.finderName} // <-- Fixed
-                  onChange={handleChange}
-                  required
+                <Form.Control 
+                  type="text"
+                  placeholder="Enter full name"
+                  name="finderName"   // ← FIXED
+                  value={formData.finderName} 
+                  onChange={handleChange} 
+                  required 
                 />
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>What is your occupation?</Form.Label>
                 <Form.Select
-                  name="occupancy" // <-- This was already correct
+                  name="occupancy"
                   value={formData.occupancy}
                   onChange={handleChange}
                   required
@@ -249,29 +304,47 @@ const FoundItemForm = () => {
 
               <Form.Group className="mb-3">
                 <Form.Label>What item did you find?</Form.Label>
-                <Form.Control
-                  name="itemName" // <-- This was already correct
-                  value={formData.itemName}
-                  onChange={handleChange}
-                  required
+                <Form.Control 
+                  type="text"
+                  placeholder="Enter item name"
+                  name="itemName" 
+                  value={formData.itemName} 
+                  onChange={handleChange} 
+                  required 
                 />
               </Form.Group>
 
-              {/* ... (rest of the form fields are correct) ... */}
               <Form.Group className="mb-3">
-                <Form.Label>Category of your item</Form.Label>
-                <Form.Select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select a category</option>
-                  {categories.map((c, i) => (
-                    <option key={i}>{c}</option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
+                  <Form.Label>Category of your Item</Form.Label>
+                  <Form.Select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((c, i) => (
+                      <option key={i} value={c}>{c}</option>
+                    ))}
+                    <option value="Others">Others</option>
+                  </Form.Select>
+                </Form.Group>
+
+                {formData.category === 'Others' && (
+                  <Form.Group className="mb-3">
+                    <Form.Label>Please specify the other category</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="specificCategory"
+                      placeholder="Enter the category"
+                      value={formData.specificCategory || ''}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, specificCategory: e.target.value }))
+                      }
+                      required
+                    />
+                  </Form.Group>
+                )}
 
               <Form.Group className="mb-3">
                 <Form.Label>What floor did you find the item?</Form.Label>
@@ -304,12 +377,12 @@ const FoundItemForm = () => {
               </Form.Group>
 
               {(formData.location === 'Room' ||
-                formData.location === 'Other') && (
+                formData.location === 'Others') && (
                 <Form.Group className="mb-3">
                   <Form.Label>
                     {formData.location === 'Room'
                       ? 'Please specify the room'
-                      : 'Please specify the other'}
+                      : 'Please specify the others'}
                   </Form.Label>
                   <Form.Control
                     type="text"
@@ -344,19 +417,14 @@ const FoundItemForm = () => {
 
               <Form.Group className="mb-3">
                 <Form.Label>What time did you find it?</Form.Label>
-                <Form.Control
-                  type="time"
-                  name="time"
-                  value={formData.time}
-                  onChange={handleChange}
-                  required
-                />
+                <Form.Control type="time" name="time" value={formData.time} onChange={handleChange} required />
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>What is your contact email?</Form.Label>
-                <Form.Control
+                <Form.Control 
                   type="email"
+                  placeholder="Enter valid email"
                   name="contactEmail"
                   value={formData.contactEmail}
                   onChange={handleChange}
@@ -367,11 +435,18 @@ const FoundItemForm = () => {
               <Form.Group className="mb-3">
                 <Form.Label>What is your contact number?</Form.Label>
                 <Form.Control
+                  type="text"
+                  placeholder="09XX-XXX-XXXX"
                   name="contactNumber"
                   value={formData.contactNumber}
-                  onChange={handleChange}
+                  onChange={handleFormattedContact}
+                  maxLength={13}
+                  pattern="^09\d{2}-\d{3}-\d{4}$"
                   required
                 />
+                <Form.Control.Feedback type="invalid">
+                  Please enter a valid Philippine mobile number.
+                </Form.Control.Feedback>
               </Form.Group>
 
               <Form.Group className="mb-3 form-full-width">
@@ -418,9 +493,10 @@ const FoundItemForm = () => {
 
               <Form.Group className="mb-3 form-full-width">
                 <Form.Label>Describe the item (Optional)</Form.Label>
-                <Form.Control
-                  as="textarea"
+                <Form.Control 
+                  as="textarea" 
                   rows={3}
+                  placeholder="Describe the item (color, shape, size, brand, unique marks, etc.)"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
@@ -428,12 +504,85 @@ const FoundItemForm = () => {
               </Form.Group>
             </div>
 
-            <Button type="submit" className="found-submit-button">
-              Submit Report
+            <Button 
+              type="submit" 
+              className="found-submit-button"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                    className="me-2"
+                  />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Report'
+              )}
             </Button>
           </Form>
         </div>
       </div>
+
+      {/* Success Modal */}
+      <Modal 
+        show={showSuccessModal} 
+        onHide={() => setShowSuccessModal(false)}
+        centered
+        backdrop="static"
+        className="custom-modal"
+      >
+        <Modal.Body className="success-modal-body">
+          <div className="success-icon-wrapper">
+            <div className="success-checkmark">
+              <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
+          </div>
+          <h3 className="success-title">Report Submitted!</h3>
+          <p className="success-message">
+            Your found item report has been submitted successfully. Thank you for helping reunite lost items with their owners!
+          </p>
+          <Button 
+            className="success-button"
+            onClick={() => {
+              setShowSuccessModal(false);
+              navigate('/');
+            }}
+          >
+            Return to Home
+          </Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Error Modal */}
+      <Modal 
+        show={showErrorModal} 
+        onHide={() => setShowErrorModal(false)}
+        centered
+        className="custom-modal"
+      >
+        <Modal.Body className="error-modal-body">
+          <div className="error-icon-wrapper">
+            <div className="error-icon">⚠️</div>
+          </div>
+          <h3 className="error-title">Oops!</h3>
+          <p className="error-message">{errorMessage}</p>
+          <Button 
+            className="error-button"
+            onClick={() => setShowErrorModal(false)}
+          >
+            Got it
+          </Button>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };
