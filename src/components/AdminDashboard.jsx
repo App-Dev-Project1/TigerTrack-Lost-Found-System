@@ -21,7 +21,15 @@ const AdminDashboard = () => {
     const [foundItems, setFoundItems] = useState([]);
     const [solvedItems, setSolvedItems] = useState([]);
 
-    // Fetch data
+    const [logoutPopup, setLogoutPopup] = useState(false);
+
+    // Match Confirmed Popup
+    const [matchPopup, setMatchPopup] = useState({ open: false, itemName: "" });
+
+    // Claim Confirmed Popup
+    const [claimPopup, setClaimPopup] = useState({ open: false, itemName: "" });
+
+    // Fetch all data
     const fetchAllData = useCallback(async () => {
         setLoading(true);
         try {
@@ -92,7 +100,7 @@ const AdminDashboard = () => {
         }
     }, []);
 
-    // Auth + realtime listener
+    // Auth + Realtime Listener
     useEffect(() => {
         const checkUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -116,40 +124,34 @@ const AdminDashboard = () => {
         };
     }, [navigate, fetchAllData]);
 
-    // Confirm match
+    // Confirm Match
     const handleMatchConfirmed = async (resolvedItem) => {
         try {
             const { error: solvedError } = await supabase
                 .from('solved_items')
-                .insert([
-                    {
-                        name: resolvedItem.name,
-                        category: resolvedItem.category,
-                        resolved_date: resolvedItem.resolvedDate,
-                        claimed_by_email: resolvedItem.claimedBy,
-                        lost_item_id: resolvedItem.lostId,
-                        found_item_id: resolvedItem.foundId,
-                        is_claimed: false,
-                        lost_details: resolvedItem.lostDetails,
-                        found_details: resolvedItem.foundDetails
-                    }
-                ]);
+                .insert([{
+                    name: resolvedItem.name,
+                    category: resolvedItem.category,
+                    resolved_date: resolvedItem.resolvedDate,
+                    claimed_by_email: resolvedItem.claimedBy,
+                    lost_item_id: resolvedItem.lostId,
+                    found_item_id: resolvedItem.foundId,
+                    is_claimed: false,
+                    lost_details: resolvedItem.lostDetails,
+                    found_details: resolvedItem.foundDetails
+                }]);
+
             if (solvedError) throw solvedError;
 
-            const { error: lostError } = await supabase
-                .from('lost_items')
-                .update({ status: 'solved' })
-                .eq('id', resolvedItem.lostId);
-            if (lostError) throw lostError;
-
-            const { error: foundError } = await supabase
-                .from('found_items')
-                .update({ status: 'solved' })
-                .eq('id', resolvedItem.foundId);
-            if (foundError) throw foundError;
+            await supabase.from('lost_items').update({ status: 'solved' }).eq('id', resolvedItem.lostId);
+            await supabase.from('found_items').update({ status: 'solved' }).eq('id', resolvedItem.foundId);
 
             await fetchAllData();
-            alert("Match confirmed!");
+
+            setMatchPopup({
+                open: true,
+                itemName: resolvedItem.name || "Item"
+            });
 
         } catch (error) {
             console.error("Error confirming match:", error);
@@ -157,9 +159,11 @@ const AdminDashboard = () => {
         }
     };
 
-    // Claim handler
+    // Claim Handler
     const handleMarkAsClaimed = async (itemId) => {
         try {
+            const item = solvedItems.find(i => i.id === itemId);
+
             const { error } = await supabase
                 .from('solved_items')
                 .update({
@@ -170,7 +174,11 @@ const AdminDashboard = () => {
             if (error) throw error;
 
             await fetchAllData();
-            alert("Item marked as claimed!");
+
+            setClaimPopup({
+                open: true,
+                itemName: item?.name || "Item"
+            });
 
         } catch (error) {
             console.error("Error marking as claimed:", error);
@@ -178,15 +186,12 @@ const AdminDashboard = () => {
         }
     };
 
-    // Logout
-    const handleLogout = async () => {
-        if (window.confirm('Are you sure you want to logout?')) {
-            await supabase.auth.signOut();
-            navigate('/');
-        }
+    const confirmLogout = async () => {
+        await supabase.auth.signOut();
+        navigate('/');
     };
 
-    // Stats using useMemo
+    // Stats
     const stats = useMemo(() => {
         const pendingCount = lostItems.length + foundItems.length;
         const resolvedCount = solvedItems.length;
@@ -199,7 +204,6 @@ const AdminDashboard = () => {
         };
     }, [lostItems, foundItems, solvedItems]);
 
-    // Content switching
     const renderContent = () => {
         if (loading && activeTab !== 'dashboard') {
             return (
@@ -237,33 +241,97 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="admin-container">
-            <div className="sidebar">
-                <img src={tigerLogo} alt="TigerTrack Logo" className="tiger-logo" />
-                <div className="sidebar-logo">
-                    <h4>TigerTrack</h4>
-                    <p>Admin Board</p>
+        <>
+            {/* LOGOUT POPUP */}
+            {logoutPopup && (
+                <div className="logout-overlay">
+                    <div className="logout-modal">
+                        <h2>Logout Confirmation</h2>
+                        <p>Are you sure you want to logout?</p>
+
+                        <div className="logout-actions">
+                            <button className="cancel-btn" onClick={() => setLogoutPopup(false)}>
+                                Cancel
+                            </button>
+                            <button className="confirm-btn" onClick={confirmLogout}>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MATCH CONFIRMED POPUP - updated design */}
+            {matchPopup.open && (
+                <div className="match-overlay">
+                    <div className="claim-modal">
+                        <div className="claim-icon">✓</div>
+
+                        <h2>Match Confirmed</h2>
+                        <p>
+                            The item <strong>{matchPopup.itemName}</strong> has been successfully matched.
+                        </p>
+
+                        <button 
+                            className="claim-close-btn"
+                            onClick={() => setMatchPopup({ open: false, itemName: "" })}
+                        >
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* CLAIM CONFIRMED POPUP */}
+            {claimPopup.open && (
+                <div className="claim-overlay">
+                    <div className="claim-modal">
+                        <div className="claim-icon">✓</div>
+
+                        <h2>Item Successfully Claimed</h2>
+                        <p>
+                            The item <strong>{claimPopup.itemName}</strong> has been marked as claimed.
+                        </p>
+
+                        <button 
+                            className="claim-close-btn"
+                            onClick={() => setClaimPopup({ open: false, itemName: "" })}
+                        >
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <div className="admin-container">
+                <div className="sidebar">
+                    <img src={tigerLogo} alt="TigerTrack Logo" className="tiger-logo" />
+
+                    <div className="sidebar-logo">
+                        <h4>TigerTrack</h4>
+                        <p>Admin Board</p>
+                    </div>
+
+                    <nav className="sidebar-nav">
+                        <NavItem icon="📊" label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+                        <NavItem icon="📦" label="Items" active={activeTab === 'items'} onClick={() => setActiveTab('items')} />
+                        <NavItem icon="🛠️" label="Solved/Claimed" active={activeTab === 'solved'} onClick={() => setActiveTab('solved')} />
+                        <NavItem icon="🗃️" label="Archive" active={activeTab === 'archive'} onClick={() => setActiveTab('archive')} />
+                        <NavItem icon="⚠️" label="Dispute" active={activeTab === 'dispute'} onClick={() => setActiveTab('dispute')} />
+                    </nav>
+
+                    <div className="sidebar-logout">
+                        <button className="logout-btn" onClick={() => setLogoutPopup(true)}>
+                            ➜ Logout
+                        </button>
+                    </div>
                 </div>
 
-                <nav className="sidebar-nav">
-                    <NavItem icon="📊" label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-                    <NavItem icon="📦" label="Items" active={activeTab === 'items'} onClick={() => setActiveTab('items')} />
-                    <NavItem icon="🛠️" label="Solved/Claimed" active={activeTab === 'solved'} onClick={() => setActiveTab('solved')} />
-                    <NavItem icon="🗃️" label="Archive" active={activeTab === 'archive'} onClick={() => setActiveTab('archive')} />
-                    <NavItem icon="⚠️" label="Dispute" active={activeTab === 'dispute'} onClick={() => setActiveTab('dispute')} />
-                </nav>
-
-                <div className="sidebar-logout">
-                    <button className="logout-btn" onClick={handleLogout}>
-                        ➜ Logout
-                    </button>
+                <div className="main-content">
+                    {renderContent()}
                 </div>
             </div>
-
-            <div className="main-content">
-                {renderContent()}
-            </div>
-        </div>
+        </>
     );
 };
 

@@ -279,13 +279,12 @@ body {
 }
 
 .stat-card p {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   margin: 0;
   opacity: 0.95;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-size: 13px;
 }
 
 /* =========================================================
@@ -405,4 +404,167 @@ body {
     margin-left: 0;
     padding: 20px;
   }
+}
+
+/* =========================================================
+   LOGOUT POPUP MODAL
+========================================================= */
+.logout-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.logout-modal {
+  background: #ffffff;
+  width: 420px;
+  padding: 28px;
+  border-radius: 18px;
+  text-align: center;
+  animation: popIn 0.25s ease-out;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+
+.logout-modal h2 {
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #6b0000;
+}
+
+.logout-modal p {
+  font-size: 15px;
+  margin-bottom: 25px;
+  color: #444;
+}
+
+.logout-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.cancel-btn {
+  padding: 12px 20px;
+  background: #d1d5db;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #c4c9d1;
+}
+
+.confirm-btn {
+  padding: 12px 20px;
+  background: #a01010;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: 0.25s;
+}
+
+.confirm-btn:hover {
+  background: #7b0000;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* =========================================================
+   CLAIM CONFIRMED / MATCH CONFIRMED POPUPS (LIGHT GREEN)
+========================================================= */
+.claim-overlay,
+.match-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2200;
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* =========================================================
+   CLAIM CONFIRMED / MATCH CONFIRMED POPUPS (GRADIENT GREEN)
+========================================================= */
+.claim-modal {
+  background: #ffffff;
+  width: 440px;
+  padding: 32px;
+  border-radius: 20px;
+  text-align: center;
+  animation: popIn 0.28s ease-out;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.28);
+  border-top: 6px solid #10b981; /* use start of gradient for border */
+  position: relative;
+}
+
+.claim-icon {
+  font-size: 58px;
+  color: #10b981; /* start of gradient for checkmark */
+  margin-bottom: 10px;
+  font-weight: 900;
+  animation: bounceIn 0.45s ease-out;
+}
+
+.claim-modal h2 {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #10b981; /* heading text in start of gradient green */
+}
+
+.claim-modal p {
+  font-size: 15px;
+  color: #059669; /* slightly darker for body text */
+  margin-bottom: 28px;
+}
+
+.claim-close-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.4px;
+  transition: 0.25s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+.claim-close-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+}
+
+.claim-close-btn:active {
+  transform: translateY(0);
 }

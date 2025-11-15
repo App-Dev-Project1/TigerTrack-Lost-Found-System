@@ -121,32 +121,10 @@
   overflow: hidden;
 }
 
-/*
- *
- * --- THIS IS THE FIX ---
- * I moved these rules OUTSIDE of the media query
- *
- */
-.table {
-  /* This forces the table to use a fixed width and not
-     resize based on the content of every cell. */
-  table-layout: fixed;
-  width: 100%;
-}
-
-.table td {
-  /* This group of properties will handle the long text
-     like "Others: ..." */
-  white-space: nowrap;      /* Prevents the text from wrapping to a new line */
-  overflow: hidden;         /* Hides any text that overflows the cell */
-  text-overflow: ellipsis;  /* Adds the '...' at the end */
-}
-/* --- END OF FIX --- */
-
-
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .table th {
@@ -166,6 +144,9 @@
   font-size: 14px;
   color: #334155;
   border-bottom: 1px solid #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table th:first-child,
@@ -182,7 +163,9 @@
 
 .table th:last-child,
 .table td:last-child {
-  width: 120px;
+  width: 165px;
+  padding-top: 20px;
+  padding-bottom: 20px;
   padding-left: 36px;
   padding-right: 36px;
 }
@@ -663,7 +646,4 @@
   .modal-content-match {
     max-width: 600px;
   }
-
-  /* The fix was here, but it's now moved outside */
-  
 }

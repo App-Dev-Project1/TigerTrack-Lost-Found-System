@@ -1,6 +1,6 @@
 // src/components/LostItemForm.jsx
 import React, { useState } from 'react';
-import { Button, Form } from 'react-bootstrap';
+import { Button, Form, Modal, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import tigerLogo from '../assets/tiger.png';
 import './LostItemForm.css';
@@ -24,43 +24,41 @@ const LostItemForm = () => {
     description: '',
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleFormattedContact = (e) => {
-  let input = e.target.value;
+    let input = e.target.value;
+    let digits = input.replace(/\D/g, "");
 
-  // Remove all non-digits first
-  let digits = input.replace(/\D/g, "");
+    if (digits.length === 0) {
+      setFormData({ ...formData, contactNumber: "" });
+      return;
+    }
 
-  // Allow deleting everything
-  if (digits.length === 0) {
-    setFormData({ ...formData, contactNumber: "" });
-    return;
-  }
+    digits = digits.substring(0, 11);
+    let formatted = "";
 
-  // Limit to 11 digits max
-  digits = digits.substring(0, 11);
+    if (digits.length <= 4) {
+      formatted = digits; 
+    } else if (digits.length <= 7) {
+      formatted = digits.substring(0, 4) + "-" + digits.substring(4);
+    } else {
+      formatted =
+        digits.substring(0, 4) +
+        "-" +
+        digits.substring(4, 7) +
+        "-" +
+        digits.substring(7, 11);
+    }
 
-  // Build format 09XX-XXX-XXXX
-  let formatted = "";
-
-  if (digits.length <= 4) {
-    formatted = digits; 
-  } else if (digits.length <= 7) {
-    formatted = digits.substring(0, 4) + "-" + digits.substring(4);
-  } else {
-    formatted =
-      digits.substring(0, 4) +
-      "-" +
-      digits.substring(4, 7) +
-      "-" +
-      digits.substring(7, 11);
-  }
-
-  setFormData({
-    ...formData,
-    contactNumber: formatted,
-  });
-};
-
+    setFormData({
+      ...formData,
+      contactNumber: formatted,
+    });
+  };
 
   const categories = [
     'Electronics', 'Bags & Backpacks', 'Books & Notebooks',
@@ -77,39 +75,41 @@ const LostItemForm = () => {
     setFormData(prevState => ({ ...prevState, [name]: value }));
   };
 
-  // --- UPDATED handleSubmit FUNCTION ---
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorModal(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // --- All your existing validation (this is good!) ---
+    // Validation
     if (!formData.ownerName || !formData.itemName || !formData.category || !formData.occupancy ||
       !formData.floor || !formData.location || !formData.date ||
       !formData.time || !formData.contactNumber || !formData.contactEmail) {
-      alert('Please fill in all required fields');
+      showError('Please fill in all required fields');
       return;
     }
 
     if ((formData.location === 'Room' || formData.location === 'Others') && !formData.specificLocation) {
-      alert('Please specify the exact location.');
+      showError('Please specify the exact location.');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.contactEmail)) {
-      alert('Please enter a valid email address');
+      showError('Please enter a valid email address');
       return;
     }
 
+    setIsSubmitting(true);
 
-    // --- 3. START SUPABASE LOGIC (FIXED) ---
     try {
-      // --- FIXED LOCATION ---
       const finalLocation = 
         (formData.location === 'Room' || formData.location === 'Others') && formData.specificLocation
           ? `${formData.location}: ${formData.specificLocation}`
           : formData.location;
 
-      // --- NEW: CUSTOM CATEGORY HANDLING ---
       const finalCategory =
         formData.category === 'Others' && formData.specificCategory
           ? `Others: ${formData.specificCategory}`
@@ -134,10 +134,12 @@ const LostItemForm = () => {
           }
         ]);
         
-      if (error) throw error; 
+      if (error) throw error;
 
-      alert('Your lost item report has been submitted successfully!');
+      setIsSubmitting(false);
+      setShowSuccessModal(true);
 
+      // Reset form
       setFormData({
         ownerName: '',
         occupancy: '',
@@ -153,15 +155,12 @@ const LostItemForm = () => {
         description: '',
       });
 
-      navigate('/'); 
-
     } catch (error) {
       console.error('Error submitting lost item report:', error);
-      alert('Error submitting report: ' + error.message);
+      setIsSubmitting(false);
+      showError('Error submitting report: ' + error.message);
     }
   };
-  // --- END OF UPDATED FUNCTION ---
-
 
   return (
     <div className="lost-form-page">
@@ -216,36 +215,36 @@ const LostItemForm = () => {
               </Form.Group>
 
               <Form.Group className="mb-3">
-                  <Form.Label>Category of your Item</Form.Label>
-                  <Form.Select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((c, i) => (
-                      <option key={i} value={c}>{c}</option>
-                    ))}
-                    <option value="Others">Others</option>
-                  </Form.Select>
-                </Form.Group>
+                <Form.Label>Category of your Item</Form.Label>
+                <Form.Select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((c, i) => (
+                    <option key={i} value={c}>{c}</option>
+                  ))}
+                  <option value="Others">Others</option>
+                </Form.Select>
+              </Form.Group>
 
-                {formData.category === 'Others' && (
-                  <Form.Group className="mb-3">
-                    <Form.Label>Please specify the other category</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="specificCategory"
-                      placeholder="Enter the category"
-                      value={formData.specificCategory || ''}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, specificCategory: e.target.value }))
-                      }
-                      required
-                    />
-                  </Form.Group>
-                )}
+              {formData.category === 'Others' && (
+                <Form.Group className="mb-3">
+                  <Form.Label>Please specify the other category</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="specificCategory"
+                    placeholder="Enter the category"
+                    value={formData.specificCategory || ''}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, specificCategory: e.target.value }))
+                    }
+                    required
+                  />
+                </Form.Group>
+              )}
 
               <Form.Group className="mb-3">
                 <Form.Label>What floor did you lose the item?</Form.Label>
@@ -263,23 +262,23 @@ const LostItemForm = () => {
                 </Form.Select>
               </Form.Group>
 
-               {(formData.location === 'Room' || formData.location === 'Others') && (
+              {(formData.location === 'Room' || formData.location === 'Others') && (
                 <Form.Group className="mb-3">
                   <Form.Label>
                     {formData.location === 'Room' ? 'Please specify the room' : 'Please specify the others'}
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="specificLocation"
-                      placeholder={formData.location === 'Room' ? 'Enter room number (e.g., Room 1902)' : 'Enter detailed location'}
-                      value={formData.specificLocation || ''}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, specificLocation: e.target.value }))
-                      }
-                      required
-                    />
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="specificLocation"
+                    placeholder={formData.location === 'Room' ? 'Enter room number (e.g., Room 1902)' : 'Enter detailed location'}
+                    value={formData.specificLocation || ''}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, specificLocation: e.target.value }))
+                    }
+                    required
+                  />
                 </Form.Group>
-               )}
+              )}
 
               <Form.Group className="mb-3">
                 <Form.Label>When did you lose it?</Form.Label>
@@ -334,13 +333,92 @@ const LostItemForm = () => {
 
             </div>
 
-            <Button type="submit" className="lost-submit-button">
-              Submit Report
+            <Button 
+              type="submit" 
+              className="lost-submit-button"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                    className="me-2"
+                  />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Report'
+              )}
             </Button>
           </Form>
         </div>
 
       </div>
+
+      {/* Success Modal */}
+      <Modal 
+        show={showSuccessModal} 
+        onHide={() => setShowSuccessModal(false)}
+        centered
+        backdrop="static"
+        className="custom-modal success-modal"
+      >
+        <Modal.Body className="modern-modal-body">
+          <div className="modal-icon-wrapper success-icon-wrapper">
+            <div className="success-checkmark">
+              <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
+          </div>
+          <h3 className="modal-title">Success!</h3>
+          <p className="modal-message">
+            Your lost item report has been submitted successfully. We'll notify you as soon as someone finds your item!
+          </p>
+          <Button 
+            className="modal-button success-button"
+            onClick={() => {
+              setShowSuccessModal(false);
+              navigate('/');
+            }}
+          >
+            Return to Home
+          </Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Error Modal */}
+      <Modal 
+        show={showErrorModal} 
+        onHide={() => setShowErrorModal(false)}
+        centered
+        className="custom-modal error-modal"
+      >
+        <Modal.Body className="modern-modal-body">
+          <div className="modal-icon-wrapper error-icon-wrapper">
+            <div className="error-x">
+              <svg className="error-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className="error-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path className="error-line error-line1" fill="none" d="M16 16 L36 36"/>
+                <path className="error-line error-line2" fill="none" d="M36 16 L16 36"/>
+              </svg>
+            </div>
+          </div>
+          <h3 className="modal-title">Oops!</h3>
+          <p className="modal-message">{errorMessage}</p>
+          <Button 
+            className="modal-button error-button"
+            onClick={() => setShowErrorModal(false)}
+          >
+            Try Again
+          </Button>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

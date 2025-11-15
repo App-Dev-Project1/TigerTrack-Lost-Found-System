@@ -26,41 +26,35 @@ const FoundItemForm = () => {
   });
 
   const handleFormattedContact = (e) => {
-  let input = e.target.value;
+    let input = e.target.value;
+    let digits = input.replace(/\D/g, "");
 
-  // Remove all non-digits first
-  let digits = input.replace(/\D/g, "");
+    if (digits.length === 0) {
+      setFormData({ ...formData, contactNumber: "" });
+      return;
+    }
 
-  // Allow deleting everything
-  if (digits.length === 0) {
-    setFormData({ ...formData, contactNumber: "" });
-    return;
-  }
+    digits = digits.substring(0, 11);
+    let formatted = "";
 
-  // Limit to 11 digits max
-  digits = digits.substring(0, 11);
+    if (digits.length <= 4) {
+      formatted = digits; 
+    } else if (digits.length <= 7) {
+      formatted = digits.substring(0, 4) + "-" + digits.substring(4);
+    } else {
+      formatted =
+        digits.substring(0, 4) +
+        "-" +
+        digits.substring(4, 7) +
+        "-" +
+        digits.substring(7, 11);
+    }
 
-  // Build format 09XX-XXX-XXXX
-  let formatted = "";
-
-  if (digits.length <= 4) {
-    formatted = digits; 
-  } else if (digits.length <= 7) {
-    formatted = digits.substring(0, 4) + "-" + digits.substring(4);
-  } else {
-    formatted =
-      digits.substring(0, 4) +
-      "-" +
-      digits.substring(4, 7) +
-      "-" +
-      digits.substring(7, 11);
-  }
-
-  setFormData({
-    ...formData,
-    contactNumber: formatted,
-  });
-};
+    setFormData({
+      ...formData,
+      contactNumber: formatted,
+    });
+  };
 
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -90,16 +84,41 @@ const FoundItemForm = () => {
   const startCamera = async () => {
     try {
       console.log("Requesting camera...");
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsCameraActive(true);
-      }
+      setIsCameraActive(true); // Set this FIRST so UI updates
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      });
+      
+      // Wait a moment for the video element to render
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(err => {
+            console.error("Video play error:", err);
+          });
+        }
+      }, 100);
+      
     } catch (err) {
       console.error("Camera Error:", err.name, err.message);
+      setIsCameraActive(false);
       setErrorMessage('Unable to access camera. Please check your permissions.');
       setShowErrorModal(true);
     }
+  };
+
+  const stopCamera = () => {
+    const video = videoRef.current;
+    if (video && video.srcObject) {
+      const stream = video.srcObject;
+      stream.getTracks().forEach((track) => track.stop());
+      video.srcObject = null;
+    }
+    setIsCameraActive(false);
   };
 
   const takePhoto = () => {
@@ -113,12 +132,16 @@ const FoundItemForm = () => {
       const photoData = canvas.toDataURL('image/png');
       setPhotoPreview(photoData);
 
-      const stream = video.srcObject;
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-      setIsCameraActive(false);
+      stopCamera();
     }
+  };
+
+  const retakePhoto = () => {
+    setPhotoPreview(null);
+    // Small delay to ensure state updates before starting camera
+    setTimeout(() => {
+      startCamera();
+    }, 50);
   };
 
   async function dataUrlToFile(dataUrl, fileName) {
@@ -280,7 +303,7 @@ const FoundItemForm = () => {
                 <Form.Control 
                   type="text"
                   placeholder="Enter full name"
-                  name="finderName"   // ← FIXED
+                  name="finderName"
                   value={formData.finderName} 
                   onChange={handleChange} 
                   required 
@@ -315,36 +338,36 @@ const FoundItemForm = () => {
               </Form.Group>
 
               <Form.Group className="mb-3">
-                  <Form.Label>Category of your Item</Form.Label>
-                  <Form.Select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((c, i) => (
-                      <option key={i} value={c}>{c}</option>
-                    ))}
-                    <option value="Others">Others</option>
-                  </Form.Select>
-                </Form.Group>
+                <Form.Label>Category of your Item</Form.Label>
+                <Form.Select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((c, i) => (
+                    <option key={i} value={c}>{c}</option>
+                  ))}
+                  <option value="Others">Others</option>
+                </Form.Select>
+              </Form.Group>
 
-                {formData.category === 'Others' && (
-                  <Form.Group className="mb-3">
-                    <Form.Label>Please specify the other category</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="specificCategory"
-                      placeholder="Enter the category"
-                      value={formData.specificCategory || ''}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, specificCategory: e.target.value }))
-                      }
-                      required
-                    />
-                  </Form.Group>
-                )}
+              {formData.category === 'Others' && (
+                <Form.Group className="mb-3">
+                  <Form.Label>Please specify the other category</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="specificCategory"
+                    placeholder="Enter the category"
+                    value={formData.specificCategory || ''}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, specificCategory: e.target.value }))
+                    }
+                    required
+                  />
+                </Form.Group>
+              )}
 
               <Form.Group className="mb-3">
                 <Form.Label>What floor did you find the item?</Form.Label>
@@ -451,7 +474,7 @@ const FoundItemForm = () => {
 
               <Form.Group className="mb-3 form-full-width">
                 <Form.Label>Take a photo using the webcam</Form.Label>
-                <div className="photo-upload-box">
+                <div className={`photo-upload-box ${isCameraActive ? 'camera-active' : ''}`}>
                   {photoPreview ? (
                     <>
                       <img
@@ -461,25 +484,45 @@ const FoundItemForm = () => {
                       />
                       <p
                         className="photo-hint"
-                        onClick={startCamera}
-                        style={{ cursor: 'pointer', color: '#007bff' }}
+                        onClick={retakePhoto}
+                        style={{ cursor: 'pointer', color: '#8b0000', marginTop: '10px', fontWeight: '600' }}
                       >
-                        Click to retake photo
+                        🔄 Click to retake photo
                       </p>
                     </>
                   ) : isCameraActive ? (
-                    <>
-                      <video ref={videoRef} autoPlay className="photo-video" />
-                      <Button
-                        variant="primary"
-                        onClick={takePhoto}
-                        className="mt-2"
-                      >
-                        Capture Photo
-                      </Button>
-                    </>
+                    <div className="camera-container">
+                      <div className="video-wrapper">
+                        <video 
+                          ref={videoRef} 
+                          autoPlay 
+                          playsInline 
+                          muted 
+                          className="photo-video"
+                          onLoadedMetadata={() => console.log("Video loaded successfully")}
+                        />
+                      </div>
+                      <div className="camera-controls">
+                        <Button
+                          variant="danger"
+                          onClick={stopCamera}
+                          className="camera-btn cancel-btn"
+                          type="button"
+                        >
+                          ✖ Cancel
+                        </Button>
+                        <Button
+                          variant="primary"
+                          onClick={takePhoto}
+                          className="camera-btn capture-btn"
+                          type="button"
+                        >
+                          📷 Capture Photo
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
-                    <div onClick={startCamera} style={{ cursor: 'pointer' }}>
+                    <div onClick={startCamera} style={{ cursor: 'pointer', padding: '40px' }}>
                       <div className="photo-icon">📷</div>
                       <p className="photo-text">Click to open camera</p>
                     </div>
@@ -535,10 +578,10 @@ const FoundItemForm = () => {
         onHide={() => setShowSuccessModal(false)}
         centered
         backdrop="static"
-        className="custom-modal"
+        className="custom-modal success-modal"
       >
-        <Modal.Body className="success-modal-body">
-          <div className="success-icon-wrapper">
+        <Modal.Body className="modern-modal-body">
+          <div className="modal-icon-wrapper success-icon-wrapper">
             <div className="success-checkmark">
               <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
                 <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
@@ -546,12 +589,12 @@ const FoundItemForm = () => {
               </svg>
             </div>
           </div>
-          <h3 className="success-title">Report Submitted!</h3>
-          <p className="success-message">
+          <h3 className="modal-title">Success!</h3>
+          <p className="modal-message">
             Your found item report has been submitted successfully. Thank you for helping reunite lost items with their owners!
           </p>
           <Button 
-            className="success-button"
+            className="modal-button success-button"
             onClick={() => {
               setShowSuccessModal(false);
               navigate('/');
@@ -567,19 +610,25 @@ const FoundItemForm = () => {
         show={showErrorModal} 
         onHide={() => setShowErrorModal(false)}
         centered
-        className="custom-modal"
+        className="custom-modal error-modal"
       >
-        <Modal.Body className="error-modal-body">
-          <div className="error-icon-wrapper">
-            <div className="error-icon">⚠️</div>
+        <Modal.Body className="modern-modal-body">
+          <div className="modal-icon-wrapper error-icon-wrapper">
+            <div className="error-x">
+              <svg className="error-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className="error-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path className="error-line error-line1" fill="none" d="M16 16 L36 36"/>
+                <path className="error-line error-line2" fill="none" d="M36 16 L16 36"/>
+              </svg>
+            </div>
           </div>
-          <h3 className="error-title">Oops!</h3>
-          <p className="error-message">{errorMessage}</p>
+          <h3 className="modal-title">Oops!</h3>
+          <p className="modal-message">{errorMessage}</p>
           <Button 
-            className="error-button"
+            className="modal-button error-button"
             onClick={() => setShowErrorModal(false)}
           >
-            Got it
+            Try Again
           </Button>
         </Modal.Body>
       </Modal>
