@@ -1,16 +1,14 @@
 // SolvedView.jsx
 import React, { useState, useEffect } from 'react';
-import { X, Eye } from 'lucide-react'; // <-- 1. IMPORTED Eye and X
+import { X } from 'lucide-react';
 import './SolvedView.css';
-import './ItemsView.css'; // <-- Import styles for the modal
+import './ItemsView.css';
 
 const SolvedView = ({ allResolvedItems, onMarkAsClaimed }) => {
   const [activeTab, setActiveTab] = useState('solved');
   const [solvedItems, setSolvedItems] = useState([]);
   const [claimedItems, setClaimedItems] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // --- 2. ADD STATE FOR THE MODAL ---
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSolvedItem, setSelectedSolvedItem] = useState(null);
 
@@ -22,18 +20,17 @@ const SolvedView = ({ allResolvedItems, onMarkAsClaimed }) => {
     setSolvedItems(solved);
     setClaimedItems(claimed);
     setLoading(false);
-  }, [allResolvedItems]); 
+  }, [allResolvedItems]);
 
   const handleMarkAsClaimed = (itemId) => {
     if (onMarkAsClaimed) {
-        onMarkAsClaimed(itemId);
+      onMarkAsClaimed(itemId);
     }
   };
 
-  // --- 3. UPDATE THIS FUNCTION TO OPEN THE MODAL ---
   const handleViewDetails = (item) => {
-    setSelectedSolvedItem(item); // Set the item to display
-    setShowDetailsModal(true);  // Open the modal
+    setSelectedSolvedItem(item);
+    setShowDetailsModal(true);
   };
 
   const renderTable = (items, type) => {
@@ -60,7 +57,7 @@ const SolvedView = ({ allResolvedItems, onMarkAsClaimed }) => {
         <table>
           <thead>
             <tr>
-              <th>Lost Item ID</th> 
+              <th>Lost Item ID</th>
               <th>Item Name</th>
               <th>Category</th>
               <th>Reported By (Lost)</th>
@@ -71,31 +68,35 @@ const SolvedView = ({ allResolvedItems, onMarkAsClaimed }) => {
           <tbody>
             {items.map((item) => (
               <tr key={item.id}>
-                <td>{item.lostId}</td>
+                <td className="item-id-cell">{item.lostId}</td>
                 <td>{item.name}</td>
                 <td>{item.category}</td>
-                <td>{item.claimedBy}</td> 
+                <td>{item.claimedBy}</td>
                 <td>{type === 'solved' ? item.resolvedDate : item.claimedDate}</td>
                 <td>
                   <div className="action-buttons">
-                    {/* --- 4. THIS BUTTON IS NOW STYLED AND FUNCTIONAL --- */}
-                    <button 
-                      className="view-btn" // Use the correct class from ItemsView.css
+                    <button
+                      className="view-btn-solved"
                       onClick={() => handleViewDetails(item)}
                     >
-                      <Eye size={16} /> View Details
+                      View
                     </button>
-                    {/* -------------------------------------------------- */}
-
-                    {type === 'solved' && (
-                      <button 
-                        className="btn-claimed"
+                    {type === 'solved' ? (
+                      <button
+                        className="claim-btn-solved"
                         onClick={() => handleMarkAsClaimed(item.id)}
                       >
                         Mark as Claimed
                       </button>
+                    ) : (
+                      <button
+                        className="dispute-btn"
+                        onClick={() => console.log("Mark dispute:", item.id)}
+                      >
+                        Mark Dispute
+                      </button>
                     )}
-                  </div>
+                                      </div>
                 </td>
               </tr>
             ))}
@@ -133,7 +134,6 @@ const SolvedView = ({ allResolvedItems, onMarkAsClaimed }) => {
           : renderTable(claimedItems, 'claimed')}
       </div>
 
-      {/* --- 5. ADD THE MODAL JSX (COPIED FROM ITEMSVIEW) --- */}
       {showDetailsModal && selectedSolvedItem && (
         <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
           <div className="modal-content modal-content-match" onClick={(e) => e.stopPropagation()}>
@@ -148,7 +148,6 @@ const SolvedView = ({ allResolvedItems, onMarkAsClaimed }) => {
             </div>
             
             <div className="match-comparison">
-              {/* Lost Report Side */}
               <div className="match-card match-card-lost">
                 <div className="match-card-header">
                   <span className="status-dot status-dot-lost"></span>
@@ -156,46 +155,93 @@ const SolvedView = ({ allResolvedItems, onMarkAsClaimed }) => {
                 </div>
                 <div className="match-details">
                   <div className="match-row">
-                    <div className="match-field"><label>Item Name</label><p>{selectedSolvedItem.lost_details?.name || 'N/A'}</p></div>
-                    <div className="match-field"><label>Category</label><p>{selectedSolvedItem.lost_details?.category || 'N/A'}</p></div>
+                    <div className="match-field">
+                      <label>Item Name</label>
+                      <p>{selectedSolvedItem.lost_details?.name || 'N/A'}</p>
+                    </div>
+                    <div className="match-field">
+                      <label>Category</label>
+                      <p>{selectedSolvedItem.lost_details?.category || 'N/A'}</p>
+                    </div>
                   </div>
                   <div className="match-row">
-                    <div className="match-field"><label>Owner Name</label><p>{selectedSolvedItem.lost_details?.ownerName || 'N/A'}</p></div>
-                    <div className="match-field"><label>Occupation</label><p>{selectedSolvedItem.lost_details?.occupation || 'N/A'}</p></div>
+                    <div className="match-field">
+                      <label>Owner Name</label>
+                      <p>{selectedSolvedItem.lost_details?.ownerName || 'N/A'}</p>
+                    </div>
+                    <div className="match-field">
+                      <label>Occupation</label>
+                      <p>{selectedSolvedItem.lost_details?.occupation || 'N/A'}</p>
+                    </div>
                   </div>
                   <div className="match-row">
-                    <div className="match-field"><label>Location</label><p>{selectedSolvedItem.lost_details?.location || 'N/A'}</p></div>
-                    <div className="match-field"><label>Date Lost</label><p>{selectedSolvedItem.lost_details?.date || 'N/A'}</p></div>
+                    <div className="match-field">
+                      <label>Location</label>
+                      <p>{selectedSolvedItem.lost_details?.location || 'N/A'}</p>
+                    </div>
+                    <div className="match-field">
+                      <label>Date Lost</label>
+                      <p>{selectedSolvedItem.lost_details?.date || 'N/A'}</p>
+                    </div>
                   </div>
-                   <div className="match-row">
-                    <div className="match-field"><label>Contact Email</label><p>{selectedSolvedItem.lost_details?.email || 'N/A'}</p></div>
-                    <div className="match-field"><label>Contact Number</label><p>{selectedSolvedItem.lost_details?.contactNumber || 'N/A'}</p></div>
+                  <div className="match-row">
+                    <div className="match-field">
+                      <label>Contact Email</label>
+                      <p>{selectedSolvedItem.lost_details?.email || 'N/A'}</p>
+                    </div>
+                    <div className="match-field">
+                      <label>Contact Number</label>
+                      <p>{selectedSolvedItem.lost_details?.contactNumber || 'N/A'}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Found Item Side */}
               <div className="match-card match-card-found">
                 <div className="match-card-header">
                   <span className="status-dot status-dot-found"></span>
                   <h4>Found Item Details</h4>
                 </div>
                 <div className="match-details">
-                   <div className="match-row">
-                    <div className="match-field"><label>Item Name</label><p>{selectedSolvedItem.found_details?.name || 'N/A'}</p></div>
-                    <div className="match-field"><label>Category</label><p>{selectedSolvedItem.found_details?.category || 'N/A'}</p></div>
+                  <div className="match-row">
+                    <div className="match-field">
+                      <label>Item Name</label>
+                      <p>{selectedSolvedItem.found_details?.name || 'N/A'}</p>
+                    </div>
+                    <div className="match-field">
+                      <label>Category</label>
+                      <p>{selectedSolvedItem.found_details?.category || 'N/A'}</p>
+                    </div>
                   </div>
                   <div className="match-row">
-                    <div className="match-field"><label>Finder Name</label><p>{selectedSolvedItem.found_details?.finderName || 'N/A'}</p></div>
-                    <div className="match-field"><label>Occupation</label><p>{selectedSolvedItem.found_details?.occupation || 'N/A'}</p></div>
+                    <div className="match-field">
+                      <label>Finder Name</label>
+                      <p>{selectedSolvedItem.found_details?.finderName || 'N/A'}</p>
+                    </div>
+                    <div className="match-field">
+                      <label>Occupation</label>
+                      <p>{selectedSolvedItem.found_details?.occupation || 'N/A'}</p>
+                    </div>
                   </div>
                   <div className="match-row">
-                    <div className="match-field"><label>Location</label><p>{selectedSolvedItem.found_details?.location || 'N/A'}</p></div>
-                    <div className="match-field"><label>Date Found</label><p>{selectedSolvedItem.found_details?.date || 'N/A'}</p></div>
+                    <div className="match-field">
+                      <label>Location</label>
+                      <p>{selectedSolvedItem.found_details?.location || 'N/A'}</p>
+                    </div>
+                    <div className="match-field">
+                      <label>Date Found</label>
+                      <p>{selectedSolvedItem.found_details?.date || 'N/A'}</p>
+                    </div>
                   </div>
                   <div className="match-row">
-                    <div className="match-field"><label>Contact Email</label><p>{selectedSolvedItem.found_details?.email || 'N/A'}</p></div>
-                    <div className="match-field"><label>Contact Number</label><p>{selectedSolvedItem.found_details?.contactNumber || 'N/A'}</p></div>
+                    <div className="match-field">
+                      <label>Contact Email</label>
+                      <p>{selectedSolvedItem.found_details?.email || 'N/A'}</p>
+                    </div>
+                    <div className="match-field">
+                      <label>Contact Number</label>
+                      <p>{selectedSolvedItem.found_details?.contactNumber || 'N/A'}</p>
+                    </div>
                   </div>
                 </div>
                 {selectedSolvedItem.found_details?.photo && (
@@ -205,7 +251,6 @@ const SolvedView = ({ allResolvedItems, onMarkAsClaimed }) => {
                 )}
               </div>
             </div>
-            {/* Action buttons removed, as this is just a "View" modal */}
           </div>
         </div>
       )}

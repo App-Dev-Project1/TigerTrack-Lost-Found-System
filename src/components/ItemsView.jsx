@@ -203,6 +203,7 @@ const ItemsView = ({
     indexOfFirstLostItem,
     indexOfLastLostItem
   );
+
   const totalLostPages =
     Math.ceil(filteredLostItems.length / itemsPerPage) || 1;
 
@@ -210,12 +211,14 @@ const ItemsView = ({
     filterFoundItems(foundItems),
     foundSortConfig
   );
+
   const indexOfLastFoundItem = currentFoundPage * itemsPerPage;
   const indexOfFirstFoundItem = indexOfLastFoundItem - itemsPerPage;
   const currentFoundItems = filteredFoundItems.slice(
     indexOfFirstFoundItem,
     indexOfLastFoundItem
   );
+
   const totalFoundPages =
     Math.ceil(filteredFoundItems.length / itemsPerPage) || 1;
 
@@ -225,9 +228,6 @@ const ItemsView = ({
         <h2 className="items-title">
           <Package size={32} /> All Items
         </h2>
-        <button className="export-btn">
-          <Download size={18} /> Export Data
-        </button>
       </div>
 
       {/* Lost Items Section */}

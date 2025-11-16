@@ -1,6 +1,6 @@
 // src/components/FoundItemForm.jsx
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button, Form, Modal, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import tigerLogo from '../assets/tiger.png';
@@ -24,6 +24,45 @@ const FoundItemForm = () => {
     contactNumber: '',
     contactEmail: '',
   });
+
+  const [roomOptions, setRoomOptions] = useState([]);
+  const [isRoomDropdownOpen, setIsRoomDropdownOpen] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('Your found item report has been submitted successfully. Thank you for helping reunite lost items with their owners!');
+  
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  const categories = [
+    'Electronics', 'Bags & Backpacks', 'Books & Notebooks',
+    'Clothing & Accessories', 'ID Cards & Documents', 'Keys',
+    'Water Bottles & Containers', 'Umbrellas'
+  ];
+
+  const occupancies = ['Student', 'Faculty', 'Staff'];
+  const floors = ['17th Floor', '18th Floor', '19th Floor', '20th Floor'];
+  const locations = ['Room', 'Hallway', 'Bathroom', 'Fire Exit', 'Lobby', 'Others'];
+
+  // Generate room options based on selected floor
+  useEffect(() => {
+    if (formData.floor && formData.location === 'Room') {
+      const floorNumber = formData.floor.replace(/\D/g, '');
+      const rooms = [];
+      for (let i = 1; i <= 15; i++) {
+        const roomNum = i < 10 ? `0${i}` : `${i}`;
+        rooms.push(`${floorNumber}${roomNum}`);
+      }
+      setRoomOptions(rooms);
+      setFormData(prev => ({ ...prev, specificLocation: '' }));
+    } else {
+      setRoomOptions([]);
+    }
+  }, [formData.floor, formData.location]);
 
   const handleFormattedContact = (e) => {
     let input = e.target.value;
@@ -56,26 +95,6 @@ const FoundItemForm = () => {
     });
   };
 
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-
-  const categories = [
-    'Electronics', 'Bags & Backpacks', 'Books & Notebooks',
-    'Clothing & Accessories', 'ID Cards & Documents', 'Keys',
-    'Water Bottles & Containers', 'Umbrellas'
-  ];
-
-  const occupancies = ['Student', 'Faculty', 'Staff'];
-  const floors = ['17th Floor', '18th Floor', '19th Floor', '20th Floor'];
-  const locations = ['Room', 'Hallway', 'Bathroom', 'Fire Exit', 'Lobby', 'Others'];
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({ ...prevState, [name]: value }));
@@ -84,7 +103,7 @@ const FoundItemForm = () => {
   const startCamera = async () => {
     try {
       console.log("Requesting camera...");
-      setIsCameraActive(true); // Set this FIRST so UI updates
+      setIsCameraActive(true);
       
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -93,7 +112,6 @@ const FoundItemForm = () => {
         } 
       });
       
-      // Wait a moment for the video element to render
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -138,7 +156,6 @@ const FoundItemForm = () => {
 
   const retakePhoto = () => {
     setPhotoPreview(null);
-    // Small delay to ensure state updates before starting camera
     setTimeout(() => {
       startCamera();
     }, 50);
@@ -153,6 +170,13 @@ const FoundItemForm = () => {
   const showError = (message) => {
     setErrorMessage(message);
     setShowErrorModal(true);
+  };
+
+  // Check if item should be archived
+  const shouldArchiveItem = (itemDate) => {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    return new Date(itemDate) <= oneYearAgo;
   };
 
   const handleSubmit = async (e) => {
@@ -215,42 +239,79 @@ const FoundItemForm = () => {
       }
     }
 
-    // Submit to database
+    // Prepare common data
+    const finalLocation = 
+      (formData.location === 'Room' || formData.location === 'Others') && formData.specificLocation
+        ? `${formData.location}: ${formData.specificLocation}`
+        : formData.location;
+    
+    const finalCategory =
+      formData.category === 'Others' && formData.specificCategory
+        ? `Others: ${formData.specificCategory}`
+        : formData.category;
+
+    // NEW LOGIC: Check if item should be archived
+    const isOldItem = shouldArchiveItem(formData.date);
+
     try {
-      const finalLocation = 
-        (formData.location === 'Room' || formData.location === 'Others') && formData.specificLocation
-          ? `${formData.location}: ${formData.specificLocation}`
-          : formData.location;
-      
-      const finalCategory =
-        formData.category === 'Others' && formData.specificCategory
-          ? `Others: ${formData.specificCategory}`
-          : formData.category;
+      if (isOldItem) {
+        // Insert directly into archives for old items
+        const { data, error } = await supabase
+          .from('archives')
+          .insert([
+            {
+              name: formData.itemName,
+              category: finalCategory,
+              floor: formData.floor,
+              location: finalLocation,
+              item_date: formData.date,
+              item_time: formData.time,
+              description: formData.description,
+              contact_number: formData.contactNumber,
+              contact_email: formData.contactEmail,
+              person_name: formData.finderName,
+              occupation: formData.occupancy,
+              photo_url: itemPhotoUrl,
+              archive_reason: 'expired',
+              original_table: 'found_items',
+              status: 'archived'
+            }
+          ]);
+          
+        if (error) throw error;
 
-      const { data, error } = await supabase
-        .from('found_items')
-        .insert([
-          {
-            finder_name: formData.finderName, 
-            name: formData.itemName,
-            occupation: formData.occupancy,
-            category: finalCategory, 
-            floor: formData.floor,
-            location: finalLocation,
-            found_date: formData.date,
-            found_time: formData.time,
-            description: formData.description,
-            contact_number: formData.contactNumber,
-            contact_email: formData.contactEmail,
-            photo_url: itemPhotoUrl,
-            status: 'pending'
-          }
-        ]);
-        
-      if (error) throw error;
+        setIsSubmitting(false);
+        setSuccessMessage('Item submitted and archived (older than 1 year). It will appear in the Archive tab.');
+        setShowSuccessModal(true);
 
-      setIsSubmitting(false);
-      setShowSuccessModal(true);
+      } else {
+        // Insert into found_items for recent items
+        const { data, error } = await supabase
+          .from('found_items')
+          .insert([
+            {
+              finder_name: formData.finderName, 
+              name: formData.itemName,
+              occupation: formData.occupancy,
+              category: finalCategory, 
+              floor: formData.floor,
+              location: finalLocation,
+              found_date: formData.date,
+              found_time: formData.time,
+              description: formData.description,
+              contact_number: formData.contactNumber,
+              contact_email: formData.contactEmail,
+              photo_url: itemPhotoUrl,
+              status: 'pending'
+            }
+          ]);
+          
+        if (error) throw error;
+
+        setIsSubmitting(false);
+        setSuccessMessage('Item submitted successfully! It will appear in the Items tab.');
+        setShowSuccessModal(true);
+      }
 
       // Reset form
       setFormData({
@@ -399,22 +460,60 @@ const FoundItemForm = () => {
                 </Form.Select>
               </Form.Group>
 
-              {(formData.location === 'Room' ||
-                formData.location === 'Others') && (
+              {formData.location === 'Room' && (
                 <Form.Group className="mb-3">
-                  <Form.Label>
-                    {formData.location === 'Room'
-                      ? 'Please specify the room'
-                      : 'Please specify the others'}
-                  </Form.Label>
+                  <Form.Label>Please specify the room</Form.Label>
+                  <div className="custom-dropdown-wrapper">
+                    <div 
+                      className={`custom-dropdown-select ${!formData.floor ? 'disabled' : ''} ${isRoomDropdownOpen ? 'open' : ''}`}
+                      onClick={() => formData.floor && setIsRoomDropdownOpen(!isRoomDropdownOpen)}
+                    >
+                      <span className={formData.specificLocation ? '' : 'placeholder'}>
+                        {formData.specificLocation || 'Select a room'}
+                      </span>
+                      <svg 
+                        className="dropdown-arrow" 
+                        width="12" 
+                        height="8" 
+                        viewBox="0 0 12 8" 
+                        fill="none"
+                      >
+                        <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </div>
+                    {isRoomDropdownOpen && formData.floor && (
+                      <>
+                        <div 
+                          className="custom-dropdown-overlay" 
+                          onClick={() => setIsRoomDropdownOpen(false)}
+                        />
+                        <div className="custom-dropdown-menu">
+                          {roomOptions.map((room, idx) => (
+                            <div
+                              key={idx}
+                              className={`custom-dropdown-option ${formData.specificLocation === room ? 'selected' : ''}`}
+                              onClick={() => {
+                                setFormData((prev) => ({ ...prev, specificLocation: room }));
+                                setIsRoomDropdownOpen(false);
+                              }}
+                            >
+                              {room}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </Form.Group>
+              )}
+
+              {formData.location === 'Others' && (
+                <Form.Group className="mb-3">
+                  <Form.Label>Please specify the others</Form.Label>
                   <Form.Control
                     type="text"
                     name="specificLocation"
-                    placeholder={
-                      formData.location === 'Room'
-                        ? 'Enter room number (e.g., Room 1902)'
-                        : 'Enter detailed location'
-                    }
+                    placeholder="Enter detailed location"
                     value={formData.specificLocation || ''}
                     onChange={(e) =>
                       setFormData((prev) => ({
@@ -434,6 +533,7 @@ const FoundItemForm = () => {
                   name="date"
                   value={formData.date}
                   onChange={handleChange}
+                  max={new Date().toISOString().split('T')[0]}
                   required
                 />
               </Form.Group>
@@ -591,7 +691,7 @@ const FoundItemForm = () => {
           </div>
           <h3 className="modal-title">Success!</h3>
           <p className="modal-message">
-            Your found item report has been submitted successfully. Thank you for helping reunite lost items with their owners!
+            {successMessage}
           </p>
           <Button 
             className="modal-button success-button"
@@ -630,7 +730,7 @@ const FoundItemForm = () => {
           >
             Try Again
           </Button>
-        </Modal.Body>
+        </Modal.Body> 
       </Modal>
     </div>
   );

@@ -28,6 +28,7 @@ const LostItemForm = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isRoomDropdownOpen, setIsRoomDropdownOpen] = useState(false);
 
   const handleFormattedContact = (e) => {
     let input = e.target.value;
@@ -70,9 +71,38 @@ const LostItemForm = () => {
   const floors = ['17th Floor', '18th Floor', '19th Floor', '20th Floor'];
   const locations = ['Room', 'Hallway', 'Bathroom', 'Fire Exit', 'Lobby', 'Others'];
 
+  // Generate room numbers based on selected floor
+  const getRoomNumbers = (floor) => {
+    if (!floor) return [];
+    const floorNumber = floor.replace(/\D/g, ''); // Extract number from "17th Floor"
+    const rooms = [];
+    for (let i = 1; i <= 15; i++) {
+      const roomNum = i < 10 ? `0${i}` : `${i}`;
+      rooms.push(`${floorNumber}${roomNum}`);
+    }
+    return rooms;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({ ...prevState, [name]: value }));
+    
+    // Reset specificLocation when floor changes
+    if (name === 'floor') {
+      setFormData(prevState => ({ 
+        ...prevState, 
+        [name]: value,
+        specificLocation: '' // Clear room selection when floor changes
+      }));
+    } else if (name === 'location') {
+      // Clear specificLocation when location type changes
+      setFormData(prevState => ({ 
+        ...prevState, 
+        [name]: value,
+        specificLocation: ''
+      }));
+    } else {
+      setFormData(prevState => ({ ...prevState, [name]: value }));
+    }
   };
 
   const showError = (message) => {
@@ -267,22 +297,73 @@ const LostItemForm = () => {
                   <Form.Label>
                     {formData.location === 'Room' ? 'Please specify the room' : 'Please specify the others'}
                   </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="specificLocation"
-                    placeholder={formData.location === 'Room' ? 'Enter room number (e.g., Room 1902)' : 'Enter detailed location'}
-                    value={formData.specificLocation || ''}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, specificLocation: e.target.value }))
-                    }
-                    required
-                  />
+                  {formData.location === 'Room' ? (
+                    <div className="custom-dropdown-wrapper">
+                      <div 
+                        className={`custom-dropdown-select ${!formData.floor ? 'disabled' : ''} ${isRoomDropdownOpen ? 'open' : ''}`}
+                        onClick={() => formData.floor && setIsRoomDropdownOpen(!isRoomDropdownOpen)}
+                      >
+                        <span className={formData.specificLocation ? '' : 'placeholder'}>
+                          {formData.specificLocation || (formData.floor ? 'Select a room number' : 'Select the floor first')}
+                        </span>
+                        <svg 
+                          className="dropdown-arrow" 
+                          width="12" 
+                          height="8" 
+                          viewBox="0 0 12 8" 
+                          fill="none"
+                        >
+                          <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      {isRoomDropdownOpen && formData.floor && (
+                        <>
+                          <div 
+                            className="custom-dropdown-overlay" 
+                            onClick={() => setIsRoomDropdownOpen(false)}
+                          />
+                          <div className="custom-dropdown-menu">
+                            {getRoomNumbers(formData.floor).map((room, idx) => (
+                              <div
+                                key={idx}
+                                className={`custom-dropdown-option ${formData.specificLocation === room ? 'selected' : ''}`}
+                                onClick={() => {
+                                  setFormData((prev) => ({ ...prev, specificLocation: room }));
+                                  setIsRoomDropdownOpen(false);
+                                }}
+                              >
+                                {room}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <Form.Control
+                      type="text"
+                      name="specificLocation"
+                      placeholder="Enter detailed location"
+                      value={formData.specificLocation || ''}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, specificLocation: e.target.value }))
+                      }
+                      required
+                    />
+                  )}
                 </Form.Group>
               )}
 
               <Form.Group className="mb-3">
                 <Form.Label>When did you lose it?</Form.Label>
-                <Form.Control type="date" name="date" value={formData.date} onChange={handleChange} required />
+                <Form.Control 
+                  type="date" 
+                  name="date" 
+                  value={formData.date} 
+                  onChange={handleChange} 
+                  max={new Date().toISOString().split('T')[0]}
+                  required 
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">

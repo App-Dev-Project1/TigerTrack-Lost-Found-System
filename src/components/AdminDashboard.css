@@ -568,3 +568,258 @@ body {
 .claim-close-btn:active {
   transform: translateY(0);
 }
+
+/* =========================================================
+   TABLE ALIGNMENT FIX
+   Ensures all rows + cells align perfectly & are centered
+========================================================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th,
+table td {
+    padding: 14px 16px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Column Header Styling */
+table th {
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #1a1a2e;
+}
+
+/* Row Styling */
+table tr {
+    height: 58px !important;      /* consistent row height */
+}
+
+table tr:nth-child(even) {
+    background: #fafafa;
+}
+
+table tr:hover {
+    background: #f3f4f6;
+}
+
+/* Checkbox Alignment */
+table td input[type="checkbox"] {
+    transform: scale(1.15);
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;                 /* center inside cell */
+}
+
+/* ACTION BUTTON FIX */
+table td .view-btn,
+table td button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;                 /* centers button inside cell */
+    height: 34px;
+}
+
+/* =========================================================
+   ACTION BUTTONS GROUP - CLOSER TOGETHER
+========================================================= */
+.action-buttons-group {
+  display: flex;
+  gap: 8px; /* Reduced from default spacing */
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+/* Action button styling */
+.view-btn, 
+.mark-claimed-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 34px;
+}
+
+.view-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.view-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.mark-claimed-btn {
+  background: #10b981;
+  color: white;
+}
+
+.mark-claimed-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.mark-claimed-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Table cell specific fixes */
+table td .action-buttons-group {
+  gap: 8px; /* Ensure gap is small in table context */
+}
+
+/* Override any existing button spacing */
+table td button {
+  margin: 0; /* Remove any default margins */
+}
+
+/* =========================================================
+   ITEMS VIEW - DROPDOWN FIXES & HEADER STYLING
+========================================================= */
+
+/* Remove box icon from All Items header */
+.content-header h2::before {
+  display: none !important;
+}
+
+/* Fix dropdown arrow positioning */
+.dropdown-select {
+  position: relative;
+  display: inline-block;
+  min-width: 140px;
+}
+
+.dropdown-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 10px 35px 10px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.dropdown-select select:hover {
+  border-color: #a01010;
+}
+
+.dropdown-select select:focus {
+  outline: none;
+  border-color: #a01010;
+  box-shadow: 0 0 0 3px rgba(160, 16, 16, 0.1);
+}
+
+/* Custom dropdown arrow */
+.dropdown-select::after {
+  content: "▼";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: #6b7280;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-select:focus-within::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Search input styling */
+.search-input {
+  padding: 10px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #a01010;
+  box-shadow: 0 0 0 3px rgba(160, 16, 16, 0.1);
+}
+
+/* Filter container styling */
+.filter-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filter-container > * {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Tab buttons styling for Items view */
+.tab-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
+}
+
+.tab-buttons button {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-buttons button.active {
+  background: #a01010;
+  color: white;
+}
+
+.tab-buttons button:hover:not(.active) {
+  background: #f1f5f9;
+  color: #374151;
+}
+
+/* Responsive design for filters */
+@media (max-width: 768px) {
+  .filter-container {
+    flex-direction: column;
+  }
+  
+  .filter-container > * {
+    min-width: 100%;
+  }
+  
+  .dropdown-select select {
+    padding: 12px 35px 12px 12px;
+  }
+}

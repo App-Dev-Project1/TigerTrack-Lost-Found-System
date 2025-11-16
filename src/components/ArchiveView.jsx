@@ -1,118 +1,149 @@
 // src/components/ArchiveView.jsx
 import React, { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
 import "./ArchiveView.css";
 
-// --- 1. HERE IS THE HARDCODED EXAMPLE DATA ---
-const hardcodedArchivedItems = [
-  {
-    id: 9001,
-    name: "Old Blue Umbrella",
-    category: "Umbrellas",
-    dateFound: "2024-01-10",
-    archiveDate: "2025-01-10",
-    archiveReason: "expired",
-  },
-  {
-    id: 9002,
-    name: "Cracked iPhone 8",
-    category: "Electronics",
-    dateFound: "2024-05-15",
-    archiveDate: "2024-06-01",
-    archiveReason: "removed",
-  },
-];
-// -------------------------------------------
-
 const ArchiveView = () => {
-  // --- 2. STATES ARE UPDATED ---
-  const [archivedItems, setArchivedItems] = useState(hardcodedArchivedItems);
-  const [loading, setLoading] = useState(false); // Set to false, no API call
-  const [filter, setFilter] = useState("all");
-  // -----------------------------
+  const [archivedItems, setArchivedItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("expired");
+  const [restoringId, setRestoringId] = useState(null);
 
-  // --- 3. THE useEffect AND fetchArchivedItems ARE REMOVED ---
-  // (No need to fetch data from an API)
-  // -----------------------------------------------------
-
-  const handleRestore = async (itemId) => {
-    // This is just a simulation, it will remove the item from the list
-    console.log("Restoring item:", itemId);
-    alert("This is a demo. Restoring the item would remove it from this list.");
-    setArchivedItems(archivedItems.filter((item) => item.id !== itemId));
-    
-    /* // TODO: When you implement the archive backend, the real code would be:
+  const fetchArchivedItems = async () => {
     try {
-      // 1. Update the item's status in the database (e.g., set to 'pending')
-      // 2. Remove it from the 'archived' table (or update an 'is_archived' flag)
-      // 3. Re-fetch data or rely on the dashboard's realtime listener to update
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('archives')
+        .select('*')
+        .order('archived_at', { ascending: false });
+
+      if (error) throw error;
+      setArchivedItems(data || []);
     } catch (error) {
-      console.error("Error restoring item:", error);
-      alert("Error restoring item");
+      console.error('Error fetching archives:', error);
+      alert('Error loading archived items');
+    } finally {
+      setLoading(false);
     }
-    */
   };
 
-  const filteredItems = archivedItems.filter((item) => {
-    if (filter === "all") return true;
-    if (filter === "expired") return item.archiveReason === "expired";
-    if (filter === "removed") return item.archiveReason === "removed";
-    return true;
-  });
+  useEffect(() => {
+    fetchArchivedItems();
+  }, []);
+
+  const handleRestore = async (itemId, itemName) => {
+    if (!window.confirm(`Are you sure you want to restore "${itemName}" to active items?`)) return;
+
+    try {
+      setRestoringId(itemId);
+      console.log('Starting restore for:', itemId, itemName);
+
+      const { data, error } = await supabase.rpc('restore_item_from_archive', {
+        archive_id: itemId
+      });
+
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      console.log('Restore result:', data);
+
+      if (data === true) {
+        // IMMEDIATELY remove from UI
+        setArchivedItems(prev => prev.filter(item => item.id !== itemId));
+        
+        // Show success
+        alert(`"${itemName}" restored successfully! It will now appear in the Items tab.`);
+        
+        // Double-check by refreshing
+        await fetchArchivedItems();
+        
+        // Notify ItemsView to refresh
+        window.dispatchEvent(new CustomEvent('itemsUpdated', { 
+          detail: { 
+            action: 'restore', 
+            itemId: itemId,
+            itemName: itemName
+          } 
+        }));
+        
+        console.log('Restore completed successfully');
+
+      } else {
+        throw new Error('Restore failed - function returned false');
+      }
+
+    } catch (error) {
+      console.error('Restore failed:', error);
+      alert(`Failed to restore item: ${error.message}`);
+      // Refresh to ensure UI is consistent
+      await fetchArchivedItems();
+    } finally {
+      setRestoringId(null);
+    }
+  };
+
+  const filteredItems = archivedItems.filter((item) => 
+    filter === "all" || item.archive_reason === filter
+  );
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString("en-US");
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
+  const formatDateTime = (dateString, timeString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (timeString) {
+        const [hours, minutes] = timeString.split(':');
+        date.setHours(parseInt(hours), parseInt(minutes));
+      }
+      return date.toLocaleString("en-US");
+    } catch {
+      return 'Invalid Date';
+    }
   };
 
   return (
-    <>
-      {/* ===== HEADER ===== */}
+    <div className="archive-container">
+      {/* Header - Made larger like Solved Items */}
       <div className="archive-header">
         <div className="archive-title-wrapper">
-          <div className="archive-icon">
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="white" 
-              strokeWidth="2.5"
-            >
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-          <h2>Archive</h2>
+          <h1>Archive</h1>
+          <p className="archive-subtitle">View archived items - {archivedItems.length} total</p>
         </div>
-        <p>View archived items</p>
       </div>
 
-      {/* ===== FILTER TABS ===== */}
+      {/* Filter Tabs */}
       <div className="filter-tabs">
-        <button
-          className={filter === "all" ? "filter-btn active" : "filter-btn"}
-          onClick={() => setFilter("all")}
-        >
-          All
-        </button>
-        <button
-          className={filter === "expired" ? "filter-btn active" : "filter-btn"}
+        <button 
+          className={filter === "expired" ? "filter-btn active" : "filter-btn"} 
           onClick={() => setFilter("expired")}
         >
-          Expired
+          Expired ({archivedItems.filter(i => i.archive_reason === 'expired').length})
         </button>
-        <button
-          className={filter === "removed" ? "filter-btn active" : "filter-btn"}
-          onClick={() => setFilter("removed")}
+        <button 
+          className={filter === "unsolved" ? "filter-btn active" : "filter-btn"} 
+          onClick={() => setFilter("unsolved")}
         >
-          Removed
+          Unsolved ({archivedItems.filter(i => i.archive_reason === 'unsolved').length})
+        </button>
+        <button 
+          className={filter === "all" ? "filter-btn active" : "filter-btn"} 
+          onClick={() => setFilter("all")}
+        >
+          All Items ({archivedItems.length})
         </button>
       </div>
 
-      {/* ===== MAIN CONTAINER ===== */}
+      {/* Main Content */}
       <div className="activity-card">
         {loading ? (
           <div className="activity-empty">
@@ -121,22 +152,12 @@ const ArchiveView = () => {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="activity-empty">
-            <svg 
-              width="80" 
-              height="80" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="#94a3b8" 
-              strokeWidth="1.5"
-              className="empty-icon"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="3" y1="9" x2="21" y2="9"></line>
-              <line x1="9" y1="21" x2="9" y2="9"></line>
-            </svg>
-            <p className="empty-title">No archived items yet</p>
+            <div className="empty-icon">📁</div>
+            <p className="empty-title">No archived items found</p>
             <p className="empty-subtitle">
-              Items unclaimed for 1 year will automatically appear here
+              {filter === "expired" 
+                ? "Found items unclaimed for 1 year will appear here"
+                : "Lost items with no matches will appear here"}
             </p>
           </div>
         ) : (
@@ -145,37 +166,39 @@ const ArchiveView = () => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Item Name</th>
-                  <th>Category</th>
-                  <th>Date Found</th>
-                  <th>Archive Date</th>
-                  <th>Reason</th>
-                  <th>Actions</th>
+                  <th>ITEM NAME</th>
+                  <th>CATEGORY</th>
+                  <th>FLOOR</th>
+                  <th>LOCATION</th>
+                  <th>ORIGINAL DATE</th>
+                  <th>ARCHIVE DATE</th>
+                  <th>REASON</th>
+                  <th>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredItems.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.id}</td>
-                    <td>{item.name}</td>
+                  <tr key={item.id} className={restoringId === item.id ? 'restoring-row' : ''}>
+                    <td>{item.original_id || item.id}</td>
+                    <td><strong>{item.name}</strong></td>
+                    <td>{item.category}</td>
+                    <td>{item.floor}</td>
+                    <td>{item.location}</td>
+                    <td>{formatDateTime(item.item_date, item.item_time)}</td>
+                    <td>{formatDate(item.archived_at)}</td>
                     <td>
-                      <span className="category-badge">{item.category}</span>
-                    </td>
-                    <td>{formatDate(item.dateFound)}</td>
-                    <td>{formatDate(item.archiveDate)}</td>
-                    <td>
-                      <span className="reason-text">
-                        {item.archiveReason === "expired"
-                          ? "Unclaimed for 1 year"
-                          : "Removed by admin"}
+                      <span className={`reason-plain ${item.archive_reason === 'expired' ? 'reason-expired' : 'reason-unsolved'}`}>
+                        {item.archive_reason === "expired" ? "Expired" : "Unsolved"}
                       </span>
                     </td>
                     <td>
-                      <button
+                      <button 
                         className="restore-btn"
-                        onClick={() => handleRestore(item.id)}
+                        onClick={() => handleRestore(item.id, item.name)}
+                        disabled={restoringId === item.id}
+                        title={`Restore ${item.name} to active items`}
                       >
-                        Restore
+                        {restoringId === item.id ? 'Restoring...' : 'Restore'}
                       </button>
                     </td>
                   </tr>
@@ -185,7 +208,7 @@ const ArchiveView = () => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

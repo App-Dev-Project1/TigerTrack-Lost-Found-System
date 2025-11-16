@@ -34,8 +34,14 @@ const AdminLogin = () => {
 
     setLoading(true);
 
+    // ---------------------------------------------------------
+    // LOGIC CHANGE: Automatically append the fake domain
+    // User types: "admin" -> Supabase gets: "admin@tigertrack.com"
+    // ---------------------------------------------------------
+    const emailForSupabase = `${formData.username}@tigertrack.com`;
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: formData.username,
+      email: emailForSupabase,
       password: formData.password,
     });
 
@@ -108,16 +114,16 @@ const AdminLogin = () => {
           )}
 
           <Form onSubmit={handleSubmit}>
-            {/* USERNAME FIELD */}
+            {/* USERNAME FIELD - Changed type to text */}
             <Form.Group className="mb-3">
-              <Form.Label className="admin-login-label">Email Address</Form.Label>
+              <Form.Label className="admin-login-label">Username</Form.Label>
               <Form.Control
-                type="email"
+                type="text" 
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
                 className="admin-login-input"
-                placeholder="Admin Email Address"
+                placeholder="Enter Admin Username"
                 disabled={loading}
                 required
               />
@@ -167,7 +173,7 @@ const AdminLogin = () => {
 
           <div className="admin-login-note">
             <strong>Note:</strong><br />
-            Please use the admin email and password you created in the Supabase Authentication {">"} Users panel.
+            Please ensure your Supabase user is created with the suffix <strong>@tigertrack.com</strong> (e.g. admin@tigertrack.com).
           </div>
         </Card.Body>
       </Card>

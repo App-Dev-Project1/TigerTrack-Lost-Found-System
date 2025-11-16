@@ -12,6 +12,26 @@ import SolvedView from './SolvedView';
 import ArchiveView from './ArchiveView';
 import DisputeView from './DisputeView';
 
+// Helper function to convert military time to 12-hour format
+const formatTimeTo12Hour = (timeString) => {
+    if (!timeString) return '';
+    
+    try {
+        // Handle both "HH:MM:SS" and "HH:MM" formats
+        const timeParts = timeString.split(':');
+        const hours = parseInt(timeParts[0], 10);
+        const minutes = timeParts[1];
+        
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const twelveHour = hours % 12 || 12;
+        
+        return `${twelveHour}:${minutes} ${period}`;
+    } catch (error) {
+        console.error('Error formatting time:', error);
+        return timeString; // Return original if conversion fails
+    }
+};
+
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -44,7 +64,7 @@ const AdminDashboard = () => {
             const mappedLostItems = lostData.map(item => ({
                 ...item,
                 date: item.lost_date,
-                time: item.lost_time,
+                time: formatTimeTo12Hour(item.lost_time), // Convert to 12-hour format
                 email: item.contact_email,
                 ownerName: item.owner_name,
                 occupation: item.occupation,
@@ -64,7 +84,7 @@ const AdminDashboard = () => {
             const mappedFoundItems = foundData.map(item => ({
                 ...item,
                 date: item.found_date,
-                time: item.found_time,
+                time: formatTimeTo12Hour(item.found_time), // Convert to 12-hour format
                 photo: item.photo_url,
                 email: item.contact_email,
                 finderName: item.finder_name,
