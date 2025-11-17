@@ -304,7 +304,7 @@ const LostItemForm = () => {
                         onClick={() => formData.floor && setIsRoomDropdownOpen(!isRoomDropdownOpen)}
                       >
                         <span className={formData.specificLocation ? '' : 'placeholder'}>
-                          {formData.specificLocation || (formData.floor ? 'Select a room number' : 'Select the floor first')}
+                          {formData.specificLocation || (formData.floor ? '' : '')}
                         </span>
                         <svg 
                           className="dropdown-arrow" 

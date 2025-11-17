@@ -9,19 +9,24 @@ const ArchiveView = () => {
   const [filter, setFilter] = useState("expired");
   const [restoringId, setRestoringId] = useState(null);
 
+  // NEW STATES
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedForDonation, setSelectedForDonation] = useState([]);
+  const [showDonationModal, setShowDonationModal] = useState(false);
+
   const fetchArchivedItems = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('archives')
-        .select('*')
-        .order('archived_at', { ascending: false });
+        .from("archives")
+        .select("*")
+        .order("archived_at", { ascending: false });
 
       if (error) throw error;
       setArchivedItems(data || []);
     } catch (error) {
-      console.error('Error fetching archives:', error);
-      alert('Error loading archived items');
+      console.error("Error fetching archives:", error);
+      alert("Error loading archived items");
     } finally {
       setLoading(false);
     }
@@ -36,112 +41,157 @@ const ArchiveView = () => {
 
     try {
       setRestoringId(itemId);
-      console.log('Starting restore for:', itemId, itemName);
 
-      const { data, error } = await supabase.rpc('restore_item_from_archive', {
-        archive_id: itemId
+      const { data, error } = await supabase.rpc("restore_item_from_archive", {
+        archive_id: itemId,
       });
 
-      if (error) {
-        console.error('Database error:', error);
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      console.log('Restore result:', data);
+      if (error) throw new Error(error.message);
 
       if (data === true) {
-        // IMMEDIATELY remove from UI
-        setArchivedItems(prev => prev.filter(item => item.id !== itemId));
-        
-        // Show success
-        alert(`"${itemName}" restored successfully! It will now appear in the Items tab.`);
-        
-        // Double-check by refreshing
+        setArchivedItems((prev) => prev.filter((item) => item.id !== itemId));
+
+        alert(`"${itemName}" restored successfully!`);
         await fetchArchivedItems();
-        
-        // Notify ItemsView to refresh
-        window.dispatchEvent(new CustomEvent('itemsUpdated', { 
-          detail: { 
-            action: 'restore', 
-            itemId: itemId,
-            itemName: itemName
-          } 
-        }));
-        
-        console.log('Restore completed successfully');
 
+        window.dispatchEvent(
+          new CustomEvent("itemsUpdated", {
+            detail: { action: "restore", itemId, itemName },
+          })
+        );
       } else {
-        throw new Error('Restore failed - function returned false');
+        throw new Error("Restore returned false");
       }
-
     } catch (error) {
-      console.error('Restore failed:', error);
       alert(`Failed to restore item: ${error.message}`);
-      // Refresh to ensure UI is consistent
       await fetchArchivedItems();
     } finally {
       setRestoringId(null);
     }
   };
 
-  const filteredItems = archivedItems.filter((item) => 
-    filter === "all" || item.archive_reason === filter
+  const filteredItems = archivedItems.filter(
+    (item) => filter === "all" || item.archive_reason === filter
   );
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     try {
       return new Date(dateString).toLocaleDateString("en-US");
     } catch {
-      return 'Invalid Date';
+      return "Invalid Date";
     }
   };
 
   const formatDateTime = (dateString, timeString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     try {
       const date = new Date(dateString);
       if (timeString) {
-        const [hours, minutes] = timeString.split(':');
+        const [hours, minutes] = timeString.split(":");
         date.setHours(parseInt(hours), parseInt(minutes));
       }
       return date.toLocaleString("en-US");
     } catch {
-      return 'Invalid Date';
+      return "Invalid Date";
+    }
+  };
+
+  // -----------------------------
+  // NEW: Handle bulk donation mode
+  // -----------------------------
+  const toggleBulkMode = () => {
+    setBulkMode(!bulkMode);
+    setSelectedForDonation([]);
+  };
+
+  const toggleSelectItem = (id) => {
+    setSelectedForDonation((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const confirmDonation = () => {
+    if (selectedForDonation.length === 0) {
+      alert("Please select at least one item to donate.");
+      return;
+    }
+    setShowDonationModal(true);
+  };
+
+  const processDonation = async () => {
+    try {
+      const { data, error } = await supabase.rpc("mark_items_for_donation", {
+        item_ids: selectedForDonation,
+      });
+
+      if (error) throw error;
+
+      alert("Items successfully marked for donation!");
+
+      setShowDonationModal(false);
+      setBulkMode(false);
+      setSelectedForDonation([]);
+
+      await fetchArchivedItems();
+    } catch (error) {
+      alert("Donation process failed: " + error.message);
     }
   };
 
   return (
     <div className="archive-container">
-      {/* Header - Made larger like Solved Items */}
+
+      {/* Header */}
       <div className="archive-header">
         <div className="archive-title-wrapper">
-          <h1>Archive</h1>
-          <p className="archive-subtitle">View archived items - {archivedItems.length} total</p>
+          <div>
+            <h2>Archive</h2>
+            <p>View archived items</p>
+          </div>
         </div>
       </div>
 
       {/* Filter Tabs */}
       <div className="filter-tabs">
-        <button 
-          className={filter === "expired" ? "filter-btn active" : "filter-btn"} 
+        <button
+          className={filter === "expired" ? "filter-btn active" : "filter-btn"}
           onClick={() => setFilter("expired")}
         >
-          Expired ({archivedItems.filter(i => i.archive_reason === 'expired').length})
+          Overdue ({archivedItems.filter((i) => i.archive_reason === "expired").length})
         </button>
-        <button 
-          className={filter === "unsolved" ? "filter-btn active" : "filter-btn"} 
+
+        <button
+          className={filter === "unsolved" ? "filter-btn active" : "filter-btn"}
           onClick={() => setFilter("unsolved")}
         >
-          Unsolved ({archivedItems.filter(i => i.archive_reason === 'unsolved').length})
+          Unsolved ({archivedItems.filter((i) => i.archive_reason === "unsolved").length})
         </button>
-        <button 
-          className={filter === "all" ? "filter-btn active" : "filter-btn"} 
-          onClick={() => setFilter("all")}
+
+        {/* NEW DONATION TAB */}
+        <button
+          className={filter === "donate" ? "filter-btn active" : "filter-btn"}
+          onClick={() => setFilter("donate")}
         >
-          All Items ({archivedItems.length})
+          Donate ({archivedItems.filter((i) => i.archive_reason === "donate").length})
         </button>
+
+      {/* NEW BULK MODE BUTTON */}
+      <div className="bulk-controls">
+    <button className="donation-bulk-btn" onClick={toggleBulkMode}>
+      {bulkMode ? "Cancel Selection" : "Select Items for Donation"}
+    </button>
+
+    {bulkMode && (
+      <button className="confirm-donation-btn" onClick={confirmDonation}>
+        Confirm Donation ({selectedForDonation.length})
+      </button>
+    )}
+  </div>
+
       </div>
+
+     
 
       {/* Main Content */}
       <div className="activity-card">
@@ -155,8 +205,10 @@ const ArchiveView = () => {
             <div className="empty-icon">📁</div>
             <p className="empty-title">No archived items found</p>
             <p className="empty-subtitle">
-              {filter === "expired" 
+              {filter === "expired"
                 ? "Found items unclaimed for 1 year will appear here"
+                : filter === "donate"
+                ? "Items marked for donation will appear here"
                 : "Lost items with no matches will appear here"}
             </p>
           </div>
@@ -165,6 +217,7 @@ const ArchiveView = () => {
             <table className="archive-table">
               <thead>
                 <tr>
+                  {bulkMode && <th>Select</th>}
                   <th>ID</th>
                   <th>ITEM NAME</th>
                   <th>CATEGORY</th>
@@ -176,9 +229,20 @@ const ArchiveView = () => {
                   <th>ACTIONS</th>
                 </tr>
               </thead>
+
               <tbody>
                 {filteredItems.map((item) => (
-                  <tr key={item.id} className={restoringId === item.id ? 'restoring-row' : ''}>
+                  <tr key={item.id}>
+                    {bulkMode && (
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedForDonation.includes(item.id)}
+                          onChange={() => toggleSelectItem(item.id)}
+                        />
+                      </td>
+                    )}
+
                     <td>{item.original_id || item.id}</td>
                     <td><strong>{item.name}</strong></td>
                     <td>{item.category}</td>
@@ -187,18 +251,30 @@ const ArchiveView = () => {
                     <td>{formatDateTime(item.item_date, item.item_time)}</td>
                     <td>{formatDate(item.archived_at)}</td>
                     <td>
-                      <span className={`reason-plain ${item.archive_reason === 'expired' ? 'reason-expired' : 'reason-unsolved'}`}>
-                        {item.archive_reason === "expired" ? "Expired" : "Unsolved"}
+                      <span
+                        className={`reason-plain ${
+                          item.archive_reason === "expired"
+                            ? "reason-expired"
+                            : item.archive_reason === "donate"
+                            ? "reason-donate"
+                            : "reason-unsolved"
+                        }`}
+                      >
+                        {item.archive_reason === "expired"
+                          ? "Overdue"
+                          : item.archive_reason === "donate"
+                          ? "For Donation"
+                          : "Unsolved"}
                       </span>
                     </td>
+
                     <td>
-                      <button 
+                      <button
                         className="restore-btn"
                         onClick={() => handleRestore(item.id, item.name)}
-                        disabled={restoringId === item.id}
-                        title={`Restore ${item.name} to active items`}
+                        disabled={restoringId === item.id || bulkMode}
                       >
-                        {restoringId === item.id ? 'Restoring...' : 'Restore'}
+                        {restoringId === item.id ? "Restoring..." : "Restore"}
                       </button>
                     </td>
                   </tr>
@@ -208,6 +284,32 @@ const ArchiveView = () => {
           </div>
         )}
       </div>
+
+      {/* DONATION MODAL */}
+      {showDonationModal && (
+        <div className="donation-modal-overlay">
+          <div className="donation-modal">
+            <h3>Confirm Donation</h3>
+            <p>
+              Are you sure you want to mark <strong>{selectedForDonation.length}</strong> item(s) for donation?
+            </p>
+
+            <div className="donation-modal-actions">
+              <button
+                className="donation-modal-cancel"
+                onClick={() => setShowDonationModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button className="donation-modal-confirm" onClick={processDonation}>
+                Yes, Donate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

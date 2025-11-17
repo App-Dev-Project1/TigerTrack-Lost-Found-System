@@ -307,7 +307,6 @@ const FoundItemForm = () => {
           ]);
           
         if (error) throw error;
-
         setIsSubmitting(false);
         setSuccessMessage('Item submitted successfully! It will appear in the Items tab.');
         setShowSuccessModal(true);
@@ -469,7 +468,7 @@ const FoundItemForm = () => {
                       onClick={() => formData.floor && setIsRoomDropdownOpen(!isRoomDropdownOpen)}
                     >
                       <span className={formData.specificLocation ? '' : 'placeholder'}>
-                        {formData.specificLocation || 'Select a room'}
+                        {formData.specificLocation || ''}
                       </span>
                       <svg 
                         className="dropdown-arrow" 

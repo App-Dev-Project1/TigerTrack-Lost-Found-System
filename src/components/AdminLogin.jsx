@@ -123,7 +123,7 @@ const AdminLogin = () => {
                 value={formData.username}
                 onChange={handleChange}
                 className="admin-login-input"
-                placeholder="Enter Admin Username"
+                placeholder="Enter Username"
                 disabled={loading}
                 required
               />
@@ -139,7 +139,7 @@ const AdminLogin = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className="admin-login-input"
-                  placeholder="Password"
+                  placeholder="Enter Password"
                   disabled={loading}
                   required
                 />
@@ -173,7 +173,7 @@ const AdminLogin = () => {
 
           <div className="admin-login-note">
             <strong>Note:</strong><br />
-            Please ensure your Supabase user is created with the suffix <strong>@tigertrack.com</strong> (e.g. admin@tigertrack.com).
+            Only authorized admin username and password are allowed to access this page.
           </div>
         </Card.Body>
       </Card>
