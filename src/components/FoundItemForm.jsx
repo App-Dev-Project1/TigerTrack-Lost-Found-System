@@ -10,6 +10,16 @@ import { supabase } from '../supabaseClient';
 const FoundItemForm = () => {
   const navigate = useNavigate();
 
+  // Get current date in Philippine timezone
+  const getPhilippineDate = () => {
+    const now = new Date();
+    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const year = phTime.getFullYear();
+    const month = String(phTime.getMonth() + 1).padStart(2, '0');
+    const day = String(phTime.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [formData, setFormData] = useState({
     finderName: '', 
     itemName: '',
@@ -532,7 +542,7 @@ const FoundItemForm = () => {
                   name="date"
                   value={formData.date}
                   onChange={handleChange}
-                  max={new Date().toISOString().split('T')[0]}
+                  max={getPhilippineDate()}
                   required
                 />
               </Form.Group>

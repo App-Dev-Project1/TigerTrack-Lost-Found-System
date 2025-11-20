@@ -243,6 +243,13 @@
   text-overflow: ellipsis;
 }
 
+/* Add this to your ArchiveView.css */
+.no-action-text {
+  color: #64748b;
+  font-size: 14px;
+  font-style: italic;
+}
+
 /* Adjust column widths for better layout */
 .archive-table th:nth-child(1),
 .archive-table td:nth-child(1) {

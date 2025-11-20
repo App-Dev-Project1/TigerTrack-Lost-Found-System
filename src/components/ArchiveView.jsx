@@ -38,14 +38,14 @@ const ArchiveView = ({ onRestore }) => {
       // 3. Format and Combine
       const formattedArchives = (archivesData || []).map(item => ({
         ...item,
-        sourceType: 'archive', // Helper tag: It's from the archives table
+        sourceType: 'archive',
         displayDate: item.archived_at
       }));
 
       const formattedDonations = (donationsData || []).map(item => ({
         ...item,
-        sourceType: 'donation', // Helper tag: It's from the donations table
-        archive_reason: 'donate', // Force this reason so the filter works
+        sourceType: 'donation',
+        archive_reason: 'donate',
         displayDate: item.donated_at
       }));
 
@@ -67,40 +67,55 @@ const ArchiveView = ({ onRestore }) => {
 
     try {
       setRestoringId(item.id);
+
+      console.log('Restoring item:', item);
+
       let data, error;
 
-      // Call the correct RPC based on where the item currently lives
-      if (item.sourceType === 'donation') {
-        const response = await supabase.rpc("restore_item_from_donation", {
-          donation_id: item.id,
-        });
-        data = response.data;
-        error = response.error;
-      } else {
-        // Explicitly cast ID to ensure it matches the bigint type
-        const response = await supabase.rpc("restore_item_from_archive", {
+      // Determine where to restore based on archive_reason
+      if (item.archive_reason === 'expired') {
+        // Overdue items (from found_items) go back to found_items
+        const response = await supabase.rpc("restore_item_to_found", {
           archive_id: Number(item.id),
         });
         data = response.data;
         error = response.error;
+      } else if (item.archive_reason === 'unsolved') {
+        // Unsolved items (from lost_items) go back to lost_items
+        const response = await supabase.rpc("restore_item_to_lost", {
+          archive_id: Number(item.id),
+        });
+        data = response.data;
+        error = response.error;
+      } else {
+        throw new Error("Unknown archive reason");
       }
 
-      if (error) throw new Error(error.message);
+      console.log('Restore response:', { data, error });
+
+      if (error) {
+        console.error('Restore error details:', error);
+        throw new Error(error.message);
+      }
 
       if (data === true) {
         // 1. Optimistic Update: Remove from the UI immediately
         setArchivedItems((prev) => prev.filter((i) => i.id !== item.id || i.sourceType !== item.sourceType));
         
-        alert(`"${item.name}" restored successfully!`);
+        const destination = item.archive_reason === 'expired' ? 'Found Items' : 'Lost Reports';
+        alert(`"${item.name}" restored successfully to ${destination}!`);
 
         // 2. Notify AdminDashboard to refresh the main Items list
         if (onRestore) {
-            onRestore();
+          console.log('Calling onRestore callback to refresh items list');
+          onRestore();
         }
+
       } else {
-        throw new Error("Restore returned false. Check database console.");
+        throw new Error("Restore returned false. Check database console logs.");
       }
     } catch (error) {
+      console.error('Restore failed:', error);
       alert(`Failed to restore item: ${error.message}`);
       // If failed, reload to show the item again
       await fetchAllItems();
@@ -178,7 +193,6 @@ const ArchiveView = ({ onRestore }) => {
 
   return (
     <div className="archive-container">
-
       {/* Header */}
       <div className="archive-header">
         <div className="archive-title-wrapper">
@@ -289,7 +303,7 @@ const ArchiveView = ({ onRestore }) => {
                           item.archive_reason === "expired"
                             ? "reason-expired"
                             : item.archive_reason === "donate"
-                            ? "reason-donate" // Ensure you have a CSS class for this or reuse one
+                            ? "reason-donate"
                             : "reason-unsolved"
                         }`}
                       >
@@ -302,13 +316,20 @@ const ArchiveView = ({ onRestore }) => {
                     </td>
 
                     <td>
-                      <button
-                        className="restore-btn"
-                        onClick={() => handleRestore(item)}
-                        disabled={restoringId === item.id || bulkMode}
-                      >
-                        {restoringId === item.id ? "Restoring..." : "Restore"}
-                      </button>
+                      {/* ONLY show restore button for archive items, NOT donations */}
+                      {item.sourceType === 'archive' && (
+                        <button
+                          className="restore-btn"
+                          onClick={() => handleRestore(item)}
+                          disabled={restoringId === item.id || bulkMode}
+                        >
+                          {restoringId === item.id ? "Restoring..." : "Restore"}
+                        </button>
+                      )}
+                      {/* For donated items, show nothing or a message */}
+                      {item.sourceType === 'donation' && (
+                        <span className="no-action-text">Donated</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -342,9 +363,8 @@ const ArchiveView = ({ onRestore }) => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
 
-export default ArchiveView; 
+export default ArchiveView;
