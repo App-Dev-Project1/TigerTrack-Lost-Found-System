@@ -129,6 +129,7 @@ const submitFoundItem = async (req, res) => {
     console.error('Backend Error:', error);
     res.status(500).json({ error: error.message });
   }
+  
 };
 
 module.exports = { submitLostItem, submitFoundItem };
