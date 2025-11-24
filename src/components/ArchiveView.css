@@ -7,7 +7,6 @@
 
 .archive-header {
   margin-bottom: 32px;
-  
 }
 
 .archive-header p {
@@ -20,7 +19,7 @@
 .archive-title-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 8px; 
+  gap: 8px;
 }
 
 .archive-title-wrapper h2 {
@@ -71,7 +70,7 @@
 
 .tabs-row {
   display: flex;
-  justify-content: space-between;  /* LEFT vs RIGHT */
+  justify-content: space-between;
   align-items: center;
   width: 100%;
   margin-bottom: 20px;
@@ -86,7 +85,6 @@
   display: flex;
   gap: 10px;
 }
-
 
 /* ITEMS FOR DONATION (Outline Gray) */
 .donation-bulk-btn {
@@ -108,7 +106,7 @@
 /* CONFIRM DONATION BUTTON (Outline Green) */
 .confirm-donation-btn {
   background: transparent;
-  border: 2px solid #059669; /* Green */
+  border: 2px solid #059669;
   color: #059669;
   padding: 8px 16px;
   border-radius: 8px;
@@ -122,32 +120,32 @@
   color: white;
 }
 
-/* MODAL OVERLAY */
+/* DONATION MODAL OVERLAY */
 .donation-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
 
-/* MODAL BOX */
+/* DONATION MODAL BOX */
 .donation-modal {
   width: 380px;
   background: white;
   padding: 24px;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   text-align: center;
   animation: fadeIn 0.25s ease;
 }
 
-/* MODAL BUTTONS */
+/* DONATION MODAL BUTTONS */
 .donation-modal-actions {
   margin-top: 20px;
   display: flex;
@@ -159,7 +157,7 @@
 .donation-modal-cancel {
   flex: 1;
   background: transparent;
-  border: 2px solid #b91c1c; /* red */
+  border: 2px solid #b91c1c;
   color: #b91c1c;
   padding: 10px 12px;
   border-radius: 8px;
@@ -177,7 +175,7 @@
 .donation-modal-confirm {
   flex: 1;
   background: transparent;
-  border: 2px solid #059669; /* green */
+  border: 2px solid #059669;
   color: #059669;
   padding: 10px 12px;
   border-radius: 8px;
@@ -191,10 +189,122 @@
   color: white;
 }
 
+/* RESTORE CONFIRMATION MODAL STYLES (Scoped) */
+.archive-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4) !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease;
+}
+
+.archive-modal-content {
+  background: white !important;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  position: relative;
+  opacity: 1 !important;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.archive-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.archive-modal-header h3 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.archive-modal-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 28px;
+  margin-top: 4px;
+}
+
+.archive-match-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.archive-btn-cancel {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.archive-btn-cancel:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.archive-btn-confirm {
+  background: #8b0000;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.archive-btn-confirm:hover {
+  background: #a50000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+}
+
 /* Simple fade-in animation */
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Activity Card */
@@ -243,59 +353,103 @@
   text-overflow: ellipsis;
 }
 
-/* Add this to your ArchiveView.css */
 .no-action-text {
   color: #64748b;
   font-size: 14px;
   font-style: italic;
 }
 
-/* Adjust column widths for better layout */
+/* Default Column Widths (used for Overdue and Unsolved filters) */
 .archive-table th:nth-child(1),
 .archive-table td:nth-child(1) {
-  width: 80px;
+  width: 80px; /* Select/ID */
 }
 
 .archive-table th:nth-child(2),
 .archive-table td:nth-child(2) {
-  width: 150px;
+  width: 150px; /* ITEM NAME */
 }
 
 .archive-table th:nth-child(3),
 .archive-table td:nth-child(3) {
-  width: 140px;
+  width: 140px; /* CATEGORY */
 }
 
 .archive-table th:nth-child(4),
 .archive-table td:nth-child(4) {
-  width: 100px;
+  width: 100px; /* FLOOR */
 }
 
 .archive-table th:nth-child(5),
 .archive-table td:nth-child(5) {
-  width: 120px;
+  width: 120px; /* LOCATION */
 }
 
 .archive-table th:nth-child(6),
 .archive-table td:nth-child(6) {
-  width: 150px;
+  width: 150px; /* ORIGINAL DATE */
 }
 
 .archive-table th:nth-child(7),
 .archive-table td:nth-child(7) {
-  width: 120px;
+  width: 120px; /* ARCHIVE DATE */
 }
 
 .archive-table th:nth-child(8),
 .archive-table td:nth-child(8) {
-  width: 180px;
+  width: 180px; /* STATUS */
 }
 
 .archive-table th:nth-child(9),
 .archive-table td:nth-child(9) {
-  width: 120px;
+  width: 120px; /* ACTIONS */
 }
 
+/* Adjustments for the 'Donated' table when the 'ACTIONS' column is removed (9 total columns) */
+.archive-table:has(th:nth-child(9):empty) th:nth-child(2),
+.archive-table:has(th:nth-child(9):empty) td:nth-child(2) {
+  /* ITEM NAME: Original 150px + 60px = 210px */
+  width: 210px;
+}
+
+.archive-table:has(th:nth-child(9):empty) th:nth-child(5),
+.archive-table:has(th:nth-child(9):empty) td:nth-child(5) {
+  /* LOCATION: Original 120px + 60px = 180px */
+  width: 180px; 
+}
+
+/* Ensure the remaining columns maintain their original widths (re-stated for clarity) */
+.archive-table:has(th:nth-child(9):empty) th:nth-child(1),
+.archive-table:has(th:nth-child(9):empty) td:nth-child(1) {
+  width: 80px; /* ID */
+}
+
+.archive-table:has(th:nth-child(9):empty) th:nth-child(3),
+.archive-table:has(th:nth-child(9):empty) td:nth-child(3) {
+  width: 140px; /* CATEGORY */
+}
+
+.archive-table:has(th:nth-child(9):empty) th:nth-child(4),
+.archive-table:has(th:nth-child(9):empty) td:nth-child(4) {
+  width: 100px; /* FLOOR */
+}
+
+.archive-table:has(th:nth-child(9):empty) th:nth-child(6),
+.archive-table:has(th:nth-child(9):empty) td:nth-child(6) {
+  width: 150px; /* ORIGINAL DATE */
+}
+
+.archive-table:has(th:nth-child(9):empty) th:nth-child(7),
+.archive-table:has(th:nth-child(9):empty) td:nth-child(7) {
+  width: 120px; /* DONATED DATE */
+}
+
+.archive-table:has(th:nth-child(9):empty) th:nth-child(8),
+.archive-table:has(th:nth-child(9):empty) td:nth-child(8) {
+  width: 180px; /* STATUS */
+}
+
+/* Restoring row state */
 .archive-table tbody tr {
   transition: background-color 0.2s ease;
 }
@@ -304,7 +458,6 @@
   background-color: #f8fafc;
 }
 
-/* Restoring row state */
 .restoring-row {
   opacity: 0.6;
   background-color: #f8fafc;
@@ -332,6 +485,11 @@
 .reason-unsolved {
   color: #8b0000;
   background: #fecaca;
+}
+
+.reason-donate {
+  color: #059669; /* Added style for 'Donated' status */
+  background: #d1fae5;
 }
 
 /* Restore Button */
@@ -416,7 +574,7 @@
   .archive-table {
     font-size: 13px;
   }
-  
+
   .archive-table th,
   .archive-table td {
     padding: 12px 8px;
@@ -429,26 +587,26 @@
     align-items: flex-start;
     gap: 16px;
   }
-  
-  .archive-title-wrapper h1 {
+
+  .archive-title-wrapper h2 {
     font-size: 36px;
   }
-  
+
   .archive-subtitle {
     font-size: 16px;
   }
-  
+
   .filter-tabs {
     width: 100%;
     flex-wrap: wrap;
   }
-  
+
   .filter-btn {
     flex: 1;
     min-width: 120px;
     text-align: center;
   }
-  
+
   .archive-table th:nth-child(4),
   .archive-table td:nth-child(4),
   .archive-table th:nth-child(5),
@@ -457,29 +615,162 @@
   .archive-table td:nth-child(7) {
     display: none;
   }
-  
+
   .activity-empty {
     padding: 60px 20px;
   }
 }
 
 @media (max-width: 480px) {
-  .archive-title-wrapper h1 {
+  .archive-title-wrapper h2 {
     font-size: 32px;
   }
-  
+
   .archive-subtitle {
     font-size: 14px;
   }
-  
+
   .filter-tabs {
     flex-direction: column;
   }
-  
+
   .archive-table th:nth-child(3),
   .archive-table td:nth-child(3),
   .archive-table th:nth-child(6),
   .archive-table td:nth-child(6) {
     display: none;
   }
+}
+
+
+/* --- SUCCESS MODAL BASE STYLES --- */
+
+.restore-success-modal,
+.donation-success-modal {
+  padding: 40px 32px 32px 32px !important;
+  max-width: 440px !important;
+  text-align: center;
+}
+
+.restore-success-icon,
+.donation-success-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+/* Styling for the SVG checkmark */
+.restore-success-icon svg circle,
+.donation-success-icon svg circle {
+  fill: #10b981; /* Green circle background */
+  stroke: #fff;
+}
+
+.restore-success-icon svg path,
+.donation-success-icon svg path {
+  stroke: #fff; /* White checkmark */
+}
+
+.restore-success-title,
+.donation-success-title {
+  font-size: 30px !important;
+  font-weight: 700;
+  color: #10b981 !important; /* Green text for Success! */
+  margin: 0 0 16px 0 !important;
+}
+
+.restore-success-message,
+.donation-success-message {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #64748b;
+  margin: 0 0 32px 0;
+}
+
+/* Style for the highlighted item name and destination */
+.restore-success-message strong.highlight-text,
+.donation-success-message strong.highlight-text {
+  color: #1e293b; /* Darker color than the default text */
+  font-weight: 700; /* Extra bold for emphasis */
+}
+
+.restore-success-btn,
+.donation-success-btn {
+  background: #10b981;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.restore-success-btn:hover,
+.donation-success-btn:hover {
+  background: #059669;
+}
+
+/* --- NEW: ERROR/WARNING MODAL STYLES --- */
+
+.error-modal {
+  padding: 40px 32px 32px 32px !important;
+  max-width: 440px !important;
+  text-align: center;
+}
+
+.error-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+/* Styling for the SVG warning icon */
+.error-icon svg {
+  stroke: #f59e0b; /* Amber/Yellow stroke for the path */
+}
+.error-icon svg path {
+  fill: #fcd34d; /* Light background for the triangle */
+  stroke: #f59e0b;
+}
+
+.error-icon svg line {
+  stroke: #f59e0b; /* Amber/Yellow for the exclamation mark lines */
+}
+
+.error-title {
+  font-size: 30px !important;
+  font-weight: 700;
+  color: #f59e0b !important; /* Amber/Yellow text for title */
+  margin: 0 0 16px 0 !important;
+}
+
+.error-message {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #334155; /* Darker text for readability */
+  margin: 0 0 32px 0;
+}
+
+.error-btn {
+  background: #f59e0b;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.error-btn:hover {
+  background: #d97706;
 }

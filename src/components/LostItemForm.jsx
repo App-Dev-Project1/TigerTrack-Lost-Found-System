@@ -32,6 +32,16 @@ const LostItemForm = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isRoomDropdownOpen, setIsRoomDropdownOpen] = useState(false);
 
+  // Get current date in Philippine timezone (UTC+8)
+  const getPhilippineDate = () => {
+    const now = new Date();
+    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const year = phTime.getFullYear();
+    const month = String(phTime.getMonth() + 1).padStart(2, '0');
+    const day = String(phTime.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleFormattedContact = (e) => {
     let input = e.target.value.replace(/\D/g, "");
     if (input.length === 0) { setFormData({ ...formData, contactNumber: "" }); return; }
@@ -187,7 +197,7 @@ const LostItemForm = () => {
 
               <Form.Group className="mb-3">
                 <Form.Label>When did you lose it?</Form.Label>
-                <Form.Control type="date" name="date" value={formData.date} onChange={handleChange} max={new Date().toISOString().split('T')[0]} required />
+                <Form.Control type="date" name="date" value={formData.date} onChange={handleChange} max={getPhilippineDate()} required />
               </Form.Group>
 
               <Form.Group className="mb-3">
@@ -244,4 +254,4 @@ const LostItemForm = () => {
   );
 };
 
-export default LostItemForm;
+export default LostItemForm

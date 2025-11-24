@@ -8,48 +8,16 @@ import {
   ChevronDown,
   Eye,
   X,
+  Trash2,
 } from "lucide-react";
 import "./ItemsView.css";
-
-// --- STYLE OBJECTS TO FIX COLUMN WIDTHS ---
-const thStyle = {
-  padding: "20px 24px",
-  textAlign: "center",
-  fontSize: "13px",
-  fontWeight: 700,
-  color: "#475569",
-  background: "#f8fafc",
-  borderBottom: "2px solid #e2e8f0",
-  whiteSpace: "nowrap",
-};
-
-const tdStyle = {
-  padding: "20px 24px",
-  textAlign: "center",
-  fontSize: "14px",
-  color: "#334155",
-  borderBottom: "1px solid #f1f5f9",
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-
-// --- Column-specific widths ---
-const colSelect = { width: "80px", paddingLeft: "24px", paddingRight: "24px" };
-const colId = { width: "70px" };
-const colItemName = { width: "20%", textAlign: "left" };
-const colCategory = { width: "20%" };
-const colFloor = { width: "120px" };
-const colLocation = { width: "25%" };
-const colDate = { width: "120px" };
-const colTime = { width: "100px" };
-const colAction = { width: "120px", paddingLeft: "24px", paddingRight: "24px" };
-// --- END OF STYLE OBJECTS ---
 
 const ItemsView = ({
   initialLostItems,
   initialFoundItems,
   onMatchConfirmed,
+  onDeleteLostItem,
+  onDeleteFoundItem,
 }) => {
   const lostItems = initialLostItems;
   const foundItems = initialFoundItems;
@@ -64,6 +32,9 @@ const ItemsView = ({
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [selectedLostItem, setSelectedLostItem] = useState(null);
   const [selectedFoundItem, setSelectedFoundItem] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteItemType, setDeleteItemType] = useState(null); // 'lost' or 'found'
 
   const [lostSearchTerm, setLostSearchTerm] = useState("");
   const [lostCategoryFilter, setLostCategoryFilter] = useState("All Categories");
@@ -149,6 +120,33 @@ const ItemsView = ({
     setShowMatchModal(false);
   };
 
+  const handleDeleteClick = (item, type, e) => {
+    e.stopPropagation();
+    setItemToDelete(item);
+    setDeleteItemType(type);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!itemToDelete || !deleteItemType) return;
+
+    if (deleteItemType === 'lost' && onDeleteLostItem) {
+      onDeleteLostItem(itemToDelete.id);
+    } else if (deleteItemType === 'found' && onDeleteFoundItem) {
+      onDeleteFoundItem(itemToDelete.id);
+    }
+
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+    setDeleteItemType(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+    setDeleteItemType(null);
+  };
+  
   const sortItems = (items, sortConfig) => {
     if (!sortConfig.key) return items;
 
@@ -218,18 +216,31 @@ const ItemsView = ({
     "All Categories",
     ...new Set(lostItems.map((item) => item.category)),
   ];
+  
+  // Updated lostFloors with "All Floors" first
   const lostFloors = [
     "All Floors",
-    ...new Set(lostItems.map((item) => item.floor)),
-  ].sort();
+    ...new Set(lostItems.map((item) => item.floor).filter(floor => floor && floor !== "All Floors"))
+  ].sort((a, b) => {
+    if (a === "All Floors") return -1;
+    if (b === "All Floors") return 1;
+    return a.localeCompare(b, undefined, { numeric: true });
+  });
+  
   const foundCategories = [
     "All Categories",
     ...new Set(foundItems.map((item) => item.category)),
   ];
+  
+  // Updated foundFloors with "All Floors" first
   const foundFloors = [
     "All Floors",
-    ...new Set(foundItems.map((item) => item.floor)),
-  ].sort();
+    ...new Set(foundItems.map((item) => item.floor).filter(floor => floor && floor !== "All Floors"))
+  ].sort((a, b) => {
+    if (a === "All Floors") return -1;
+    if (b === "All Floors") return 1;
+    return a.localeCompare(b, undefined, { numeric: true });
+  });
 
   const filteredLostItems = sortItems(filterLostItems(lostItems), lostSortConfig);
   const indexOfLastLostItem = currentLostPage * itemsPerPage;
@@ -238,6 +249,7 @@ const ItemsView = ({
     indexOfFirstLostItem,
     indexOfLastLostItem
   );
+
   const totalLostPages =
     Math.ceil(filteredLostItems.length / itemsPerPage) || 1;
 
@@ -245,24 +257,32 @@ const ItemsView = ({
     filterFoundItems(foundItems),
     foundSortConfig
   );
+
   const indexOfLastFoundItem = currentFoundPage * itemsPerPage;
   const indexOfFirstFoundItem = indexOfLastFoundItem - itemsPerPage;
   const currentFoundItems = filteredFoundItems.slice(
     indexOfFirstFoundItem,
     indexOfLastFoundItem
   );
+
   const totalFoundPages =
     Math.ceil(filteredFoundItems.length / itemsPerPage) || 1;
 
+  useEffect(() => {
+  const refreshItems = () => fetchItems();
+  window.addEventListener("itemsUpdated", refreshItems);
+
+  return () => {
+    window.removeEventListener("itemsUpdated", refreshItems);
+  };
+}, []);
+  
   return (
     <div className="items-container">
       <div className="items-header">
         <h2 className="items-title">
-          <Package size={32} /> All Items
+          All Items
         </h2>
-        <button className="export-btn">
-          <Download size={18} /> Export Data
-        </button>
       </div>
 
       {/* Lost Items Section */}
@@ -283,69 +303,71 @@ const ItemsView = ({
               className="search-input"
             />
           </div>
-          <select
-            value={lostCategoryFilter}
-            onChange={(e) => {
-              setLostCategoryFilter(e.target.value);
-              setCurrentLostPage(1);
-            }}
-            className="filter-select"
-          >
-            {lostCategories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          <select
-            value={lostFloorFilter}
-            onChange={(e) => {
-              setLostFloorFilter(e.target.value);
-              setCurrentLostPage(1);
-            }}
-            className="filter-select"
-          >
-            {lostFloors.map((floor) => (
-              <option key={floor} value={floor}>
-                {floor}
-              </option>
-            ))}
-          </select>
+          
+          {/* Category Filter with dropdown arrow */}
+          <div className="filter-select-container">
+            <select
+              value={lostCategoryFilter}
+              onChange={(e) => {
+                setLostCategoryFilter(e.target.value);
+                setCurrentLostPage(1);
+              }}
+              className="filter-select"
+            >
+              {lostCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Floor Filter with dropdown arrow - Now with "All Floors" first */}
+          <div className="filter-select-container">
+            <select
+              value={lostFloorFilter}
+              onChange={(e) => {
+                setLostFloorFilter(e.target.value);
+                setCurrentLostPage(1);
+              }}
+              className="filter-select"
+            >
+              {lostFloors.map((floor) => (
+                <option key={floor} value={floor}>
+                  {floor}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="table-card">
-          <table
-            className="table"
-            style={{ tableLayout: "fixed", width: "100%" }}
-          >
+          <table className="table">
             <thead>
               <tr>
-                <th style={{ ...thStyle, ...colSelect }}>Select</th>
-                <th style={{ ...thStyle, ...colId }}>ID</th>
+                <th>Select</th>
+                <th>ID</th>
                 <th
                   className="sortable-header"
                   onClick={() => handleLostSort("name")}
-                  style={{ ...thStyle, ...colItemName }}
                 >
                   <div className="header-content">
                     Item Name
                   </div>
                 </th>
-                <th style={{ ...thStyle, ...colCategory }}>Category</th>
+                <th>Category</th>
                 <th
                   className="sortable-header"
                   onClick={() => handleLostSort("floor")}
-                  style={{ ...thStyle, ...colFloor }}
                 >
                   <div className="header-content">
                     Floor
                   </div>
                 </th>
-                <th style={{ ...thStyle, ...colLocation }}>Location</th>
+                <th>Location</th>
                 <th
                   className="sortable-header"
                   onClick={() => handleLostSort("date")}
-                  style={{ ...thStyle, ...colDate }}
                 >
                   <div className="header-content">
                     Date
@@ -354,13 +376,12 @@ const ItemsView = ({
                 <th
                   className="sortable-header"
                   onClick={() => handleLostSort("time")}
-                  style={{ ...thStyle, ...colTime }}
                 >
                   <div className="header-content">
                     Time
                   </div>
                 </th>
-                <th style={{ ...thStyle, ...colAction }}>Action</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -375,7 +396,7 @@ const ItemsView = ({
                       : ""
                   }`}
                 >
-                  <td style={{ ...tdStyle, ...colSelect }}>
+                  <td>
                     <input
                       type="checkbox"
                       checked={selectedLostId === item.id}
@@ -383,20 +404,37 @@ const ItemsView = ({
                       className="checkbox-no-animation"
                     />
                   </td>
-                  <td style={{ ...tdStyle, ...colId }}>{item.id}</td>
-                  <td style={{ ...tdStyle, ...colItemName }}>{item.name}</td>
-                  <td style={{ ...tdStyle, ...colCategory }}>{item.category}</td>
-                  <td style={{ ...tdStyle, ...colFloor }}>{item.floor}</td>
-                  <td style={{ ...tdStyle, ...colLocation }}>{item.location}</td>
-                  <td style={{ ...tdStyle, ...colDate }}>{item.date}</td>
-                  <td style={{ ...tdStyle, ...colTime }}>{item.time}</td>
-                  <td style={{ ...tdStyle, ...colAction }}>
-                    <button
-                      className="view-btn"
-                      onClick={() => handleViewLostItem(item)}
-                    >
-                      <Eye size={16} /> View
-                    </button>
+                  <td>{item.id}</td>
+                  <td>{item.name}</td>
+                  <td>{item.category}</td>
+                  <td>{item.floor}</td>
+                  <td>{item.location}</td>
+                  <td>{item.date}</td>
+                  <td>{item.time}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="view-btn-solved"
+                        onClick={() => handleViewLostItem(item)}
+                      >
+                        View
+                      </button>
+                      <div
+                        className="delete-icon"
+                        onClick={(e) => handleDeleteClick(item, 'lost', e)}
+                        style={{
+                          cursor: 'pointer',
+                          color: '#6b7280',
+                          padding: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -445,69 +483,71 @@ const ItemsView = ({
               className="search-input"
             />
           </div>
-          <select
-            value={foundCategoryFilter}
-            onChange={(e) => {
-              setFoundCategoryFilter(e.target.value);
-              setCurrentFoundPage(1);
-            }}
-            className="filter-select"
-          >
-            {foundCategories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          <select
-            value={foundFloorFilter}
-            onChange={(e) => {
-              setFoundFloorFilter(e.target.value);
-              setCurrentFoundPage(1);
-            }}
-            className="filter-select"
-          >
-            {foundFloors.map((floor) => (
-              <option key={floor} value={floor}>
-                {floor}
-              </option>
-            ))}
-          </select>
+          
+          {/* Category Filter with dropdown arrow */}
+          <div className="filter-select-container">
+            <select
+              value={foundCategoryFilter}
+              onChange={(e) => {
+                setFoundCategoryFilter(e.target.value);
+                setCurrentFoundPage(1);
+              }}
+              className="filter-select"
+            >
+              {foundCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Floor Filter with dropdown arrow - Now with "All Floors" first */}
+          <div className="filter-select-container">
+            <select
+              value={foundFloorFilter}
+              onChange={(e) => {
+                setFoundFloorFilter(e.target.value);
+                setCurrentFoundPage(1);
+              }}
+              className="filter-select"
+            >
+              {foundFloors.map((floor) => (
+                <option key={floor} value={floor}>
+                  {floor}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="table-card">
-          <table
-            className="table"
-            style={{ tableLayout: "fixed", width: "100%" }}
-          >
+          <table className="table">
             <thead>
               <tr>
-                <th style={{ ...thStyle, ...colSelect }}>Select</th>
-                <th style={{ ...thStyle, ...colId }}>ID</th>
+                <th>Select</th>
+                <th>ID</th>
                 <th
                   className="sortable-header"
                   onClick={() => handleFoundSort("name")}
-                  style={{ ...thStyle, ...colItemName }}
                 >
                   <div className="header-content">
                     Item Name
                   </div>
                 </th>
-                <th style={{ ...thStyle, ...colCategory }}>Category</th>
+                <th>Category</th>
                 <th
                   className="sortable-header"
                   onClick={() => handleFoundSort("floor")}
-                  style={{ ...thStyle, ...colFloor }}
                 >
                   <div className="header-content">
                     Floor
                   </div>
                 </th>
-                <th style={{ ...thStyle, ...colLocation }}>Location</th>
+                <th>Location</th>
                 <th
                   className="sortable-header"
                   onClick={() => handleFoundSort("date")}
-                  style={{ ...thStyle, ...colDate }}
                 >
                   <div className="header-content">
                     Date
@@ -516,13 +556,12 @@ const ItemsView = ({
                 <th
                   className="sortable-header"
                   onClick={() => handleFoundSort("time")}
-                  style={{ ...thStyle, ...colTime }}
                 >
                   <div className="header-content">
                     Time
                   </div>
                 </th>
-                <th style={{ ...thStyle, ...colAction }}>Action</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -539,7 +578,7 @@ const ItemsView = ({
                       : ""
                   }`}
                 >
-                  <td style={{ ...tdStyle, ...colSelect }}>
+                  <td>
                     <input
                       type="checkbox"
                       checked={selectedFoundId === item.id}
@@ -548,20 +587,37 @@ const ItemsView = ({
                       disabled={!selectedLostId}
                     />
                   </td>
-                  <td style={{ ...tdStyle, ...colId }}>{item.id}</td>
-                  <td style={{ ...tdStyle, ...colItemName }}>{item.name}</td>
-                  <td style={{ ...tdStyle, ...colCategory }}>{item.category}</td>
-                  <td style={{ ...tdStyle, ...colFloor }}>{item.floor}</td>
-                  <td style={{ ...tdStyle, ...colLocation }}>{item.location}</td>
-                  <td style={{ ...tdStyle, ...colDate }}>{item.date}</td>
-                  <td style={{ ...tdStyle, ...colTime }}>{item.time}</td>
-                  <td style={{ ...tdStyle, ...colAction }}>
-                    <button
-                      className="view-btn"
-                      onClick={() => handleViewFoundItem(item)}
-                    >
-                      <Eye size={16} /> View
-                    </button>
+                  <td>{item.id}</td>
+                  <td>{item.name}</td>
+                  <td>{item.category}</td>
+                  <td>{item.floor}</td>
+                  <td>{item.location}</td>
+                  <td>{item.date}</td>
+                  <td>{item.time}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="view-btn-solved"
+                        onClick={() => handleViewFoundItem(item)}
+                      >
+                        View
+                      </button>
+                      <div
+                        className="delete-icon"
+                        onClick={(e) => handleDeleteClick(item, 'found', e)}
+                        style={{
+                          cursor: 'pointer',
+                          color: '#6b7280',
+                          padding: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -596,8 +652,7 @@ const ItemsView = ({
         </div>
       </div>
 
-      {/* --- MODALS --- */}
-      {/* (All modal code remains the same) */}
+      {/* MODALS */}
 
       {showLostModal && selectedLostItem && (
         <div className="modal-overlay" onClick={() => setShowLostModal(false)}>
@@ -874,6 +929,43 @@ const ItemsView = ({
               </button>
               <button className="btn-confirm" onClick={handleConfirmMatch}>
                 Confirm Match
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && itemToDelete && (
+        <div className="modal-overlay" onClick={handleCancelDelete}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '500px' }}
+          >
+            <div className="modal-header">
+              <h3>Confirm Deletion</h3>
+            </div>
+            <div
+              className="modal-subtitle"
+              style={{
+                fontSize: '16px',
+                lineHeight: '1.6',
+                marginBottom: '23px',
+                textAlign: 'center',
+                color: '#000000'
+              }}
+            >
+              Are you sure you want to delete <b>{itemToDelete.name.trim()}</b>?<br />
+              This action cannot be undone.
+            </div>
+
+            <div className="match-actions">
+              <button className="btn-cancel" onClick={handleCancelDelete}>
+                Cancel
+              </button>
+              <button className="btn-confirm" onClick={handleConfirmDelete}>
+                Delete
               </button>
             </div>
           </div>

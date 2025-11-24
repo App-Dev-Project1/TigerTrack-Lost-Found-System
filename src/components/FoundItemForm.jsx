@@ -38,6 +38,16 @@ const FoundItemForm = () => {
   const floors = ['17th Floor', '18th Floor', '19th Floor', '20th Floor'];
   const locations = ['Room', 'Hallway', 'Bathroom', 'Fire Exit', 'Lobby', 'Others'];
 
+  // Get current date in Philippine timezone (UTC+8)
+  const getPhilippineDate = () => {
+    const now = new Date();
+    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const year = phTime.getFullYear();
+    const month = String(phTime.getMonth() + 1).padStart(2, '0');
+    const day = String(phTime.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     if (formData.floor && formData.location === 'Room') {
       const floorNumber = formData.floor.replace(/\D/g, '');
@@ -235,7 +245,7 @@ const FoundItemForm = () => {
 
               <Form.Group className="mb-3">
                 <Form.Label>When did you find it?</Form.Label>
-                <Form.Control type="date" name="date" value={formData.date} onChange={handleChange} max={new Date().toISOString().split('T')[0]} required />
+                <Form.Control type="date" name="date" value={formData.date} onChange={handleChange} max={getPhilippineDate()} required />
               </Form.Group>
 
               <Form.Group className="mb-3">
