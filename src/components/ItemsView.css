@@ -91,7 +91,8 @@
 .filter-select-container {
   position: relative;
   display: inline-block;
-  min-width: 160px;
+  /* CHANGED: Switched from min-width: 160px to width: 220px to force consistent size */
+  width: 220px; 
   flex-shrink: 0;
 }
 
@@ -783,13 +784,13 @@
     flex-direction: column;
     align-items: stretch;
   }
-  
+   
   .search-box,
   .filter-select-container {
     width: 100%;
     min-width: auto;
   }
-  
+   
   .search-box {
     max-width: none;
   }

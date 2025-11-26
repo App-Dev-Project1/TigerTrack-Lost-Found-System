@@ -156,6 +156,38 @@ table tr:hover {
   box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
 }
 
+/* Restore Button - Dark Red Outline Style */
+.restore-btn-solved {
+  background: transparent;
+  color: #8b0000;
+  border: 1.5px solid #8b0000;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  height: 28px;
+  margin: 0 1px;
+  white-space: nowrap;
+}
+
+.restore-btn-solved:hover:not(:disabled) {
+  background: #8b0000;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(139, 0, 0, 0.2);
+}
+
+.restore-btn-solved:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .dispute-btn {
   background: transparent;
   color: #dc2626; /* red-600 */
@@ -206,6 +238,243 @@ table tr:hover {
   color: #374151;
 }
 
+/* --- RESTORE MODAL STYLES (Scoped) --- */
+.solved-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4) !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease;
+}
+
+.solved-modal-content {
+  background: white !important;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  position: relative;
+  opacity: 1 !important;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.solved-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.solved-modal-header h3 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.solved-modal-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 28px;
+  margin-top: 4px;
+}
+
+.solved-match-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.solved-btn-cancel {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.solved-btn-cancel:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.solved-btn-confirm {
+  background: #8b0000;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.solved-btn-confirm:hover {
+  background: #a50000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+}
+
+/* Simple fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* --- SUCCESS MODAL STYLES --- */
+.restore-success-modal {
+  padding: 40px 32px 32px 32px !important;
+  max-width: 440px !important;
+  text-align: center;
+}
+
+.restore-success-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.restore-success-icon svg circle {
+  fill: #10b981;
+  stroke: #fff;
+}
+
+.restore-success-icon svg path {
+  stroke: #fff;
+}
+
+.restore-success-title {
+  font-size: 30px !important;
+  font-weight: 700;
+  color: #10b981 !important;
+  margin: 0 0 16px 0 !important;
+}
+
+.restore-success-message {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #64748b;
+  margin: 0 0 32px 0;
+}
+
+.restore-success-message strong.highlight-text {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.restore-success-btn {
+  background: #10b981;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.restore-success-btn:hover {
+  background: #059669;
+}
+
+/* --- ERROR MODAL STYLES --- */
+.error-modal {
+  padding: 40px 32px 32px 32px !important;
+  max-width: 440px !important;
+  text-align: center;
+}
+
+.error-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.error-icon svg {
+  stroke: #f59e0b;
+}
+
+.error-icon svg path {
+  fill: #fcd34d;
+  stroke: #f59e0b;
+}
+
+.error-icon svg line {
+  stroke: #f59e0b;
+}
+
+.error-title {
+  font-size: 30px !important;
+  font-weight: 700;
+  color: #f59e0b !important;
+  margin: 0 0 16px 0 !important;
+}
+
+.error-message {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #334155;
+  margin: 0 0 32px 0;
+}
+
+.error-btn {
+  background: #f59e0b;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.error-btn:hover {
+  background: #d97706;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .activity-card {
@@ -224,8 +493,9 @@ table tr:hover {
   }
   
   .view-btn-solved,
-  .claim-btn-solved {
-    min-width: 85px;
+  .claim-btn-solved,
+  .restore-btn-solved {
+    min-width: 70px;
     font-size: 11px;
     padding: 4px 6px;
     height: 26px;

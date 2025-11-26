@@ -43,6 +43,8 @@
   display: flex;
   gap: 12px;
   margin-bottom: 32px;
+  align-items: center; /* Ensures tabs and buttons align vertically */
+  width: 100%; /* Ensures the container spans the full width */
 }
 
 .filter-btn {
@@ -84,6 +86,7 @@
 .bulk-controls {
   display: flex;
   gap: 10px;
+  margin-left: auto; /* This pushes the buttons to the far right */
 }
 
 /* ITEMS FOR DONATION (Outline Gray) */
