@@ -1,7 +1,7 @@
 // src/components/AdminDashboard.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './AdminDashboard.css';
+import '../styles/AdminDashboard.css';
 import tigerLogo from "../assets/tiger.png";
 import { supabase } from '../supabaseClient';
 

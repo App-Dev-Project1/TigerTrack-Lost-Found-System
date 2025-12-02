@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { supabase } from "../supabaseClient";
-import './SolvedView.css';
-import './ItemsView.css';
+import '../styles/SolvedView.css';
+import '../styles/ItemsView.css';
 
 // Error/Warning Modal Component
 const ErrorModal = ({ title, message, onClose }) => {

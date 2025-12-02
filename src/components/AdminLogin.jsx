@@ -5,7 +5,7 @@ import { Card, Button, Form, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import tigerLogo from '../assets/tiger.png'; 
 import cicsBuilding from '../assets/cics.png';
-import './AdminLogin.css';
+import '../styles/AdminLogin.css';
 import { supabase } from '../supabaseClient';
 
 const AdminLogin = () => {

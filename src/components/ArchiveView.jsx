@@ -1,9 +1,9 @@
 // src/components/ArchiveView.jsx
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import "./ArchiveView.css";
+import "../styles/ArchiveView.css"; // Updated path to styles folder
 
-// Error/Warning Modal Component (NEW)
+// Error/Warning Modal Component
 const ErrorModal = ({ title, message, onClose }) => {
   return (
     <div className="archive-modal-overlay" onClick={onClose}>
@@ -12,14 +12,13 @@ const ErrorModal = ({ title, message, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="error-icon">
-          {/* SVG Warning Icon (Exclamation mark in a triangle/circle) */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             width="48"
             height="48"
             fill="none"
-            stroke="#f59e0b" /* Amber/Yellow color */
+            stroke="#f59e0b"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -39,8 +38,7 @@ const ErrorModal = ({ title, message, onClose }) => {
   );
 };
 
-
-// Donation Success Modal Component (EXISTING)
+// Donation Success Modal Component
 const DonationSuccessModal = ({ count, onClose }) => {
   return (
     <div className="archive-modal-overlay" onClick={onClose}> 
@@ -49,7 +47,6 @@ const DonationSuccessModal = ({ count, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="donation-success-icon">
-          {/* SVG Checkmark icon */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 52 52"
@@ -77,8 +74,7 @@ const DonationSuccessModal = ({ count, onClose }) => {
   );
 };
 
-
-// Restore Success Modal Component (EXISTING)
+// Restore Success Modal Component
 const RestoreSuccessModal = ({ item, destination, onClose }) => {
   return (
     <div className="archive-modal-overlay" onClick={onClose}> 
@@ -87,7 +83,6 @@ const RestoreSuccessModal = ({ item, destination, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="restore-success-icon">
-          {/* SVG Checkmark icon */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 52 52"
@@ -115,7 +110,6 @@ const RestoreSuccessModal = ({ item, destination, onClose }) => {
   );
 };
 
-
 const ArchiveView = ({ onRestore }) => {
   const [archivedItems, setArchivedItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +123,7 @@ const ArchiveView = ({ onRestore }) => {
   const [showDonationSuccessModal, setShowDonationSuccessModal] = useState(false);
   const [donatedItemCount, setDonatedItemCount] = useState(0);
 
-  // Error/Warning State (NEW)
+  // Error/Warning State
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -141,8 +135,6 @@ const ArchiveView = ({ onRestore }) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [restoredItemDetails, setRestoredItemDetails] = useState({ name: '', destination: '' });
 
-
-  // Fetching and utility functions remain the same
   const fetchAllItems = async () => {
     try {
       setLoading(true);
@@ -180,7 +172,6 @@ const ArchiveView = ({ onRestore }) => {
       setArchivedItems([...formattedArchives, ...formattedDonations]);
     } catch (error) {
       console.error("Error fetching data:", error);
-      // Using custom modal for generic errors too now
       setErrorMessage("Error loading items: " + error.message);
       setShowErrorModal(true);
     } finally {
@@ -201,9 +192,7 @@ const ArchiveView = ({ onRestore }) => {
   const handleConfirmRestore = async () => {
     if (!itemToRestore) return;
 
-    // Capture details before state changes
     const itemName = itemToRestore.name.trim();
-    // Determine the destination based on archive reason for the message
     const destination = itemToRestore.archive_reason === 'expired' ? 'Found Items' : 'Lost Reports';
     const originalItemToRestore = itemToRestore;
 
@@ -213,7 +202,6 @@ const ArchiveView = ({ onRestore }) => {
 
       let data, error;
 
-      // Determine where to restore based on archive_reason
       if (originalItemToRestore.archive_reason === 'expired') {
         const response = await supabase.rpc("restore_item_to_found", {
           archive_id: Number(originalItemToRestore.id),
@@ -235,14 +223,10 @@ const ArchiveView = ({ onRestore }) => {
       }
 
       if (data === true) {
-        // 1. Optimistic Update: Remove from the UI immediately
         setArchivedItems((prev) => prev.filter((i) => i.id !== originalItemToRestore.id || i.sourceType !== originalItemToRestore.sourceType));
-        
-        // 2. Show Success Modal with determined destination
         setRestoredItemDetails({ name: itemName, destination: destination });
         setShowSuccessModal(true); 
 
-        // 3. Notify AdminDashboard to refresh the main Items list
         if (onRestore) {
           onRestore();
         }
@@ -274,7 +258,7 @@ const ArchiveView = ({ onRestore }) => {
     setShowDonationSuccessModal(false);
   };
   
-  const handleCloseErrorModal = () => { // NEW function
+  const handleCloseErrorModal = () => {
     setShowErrorModal(false);
     setErrorMessage("");
   };
@@ -320,7 +304,6 @@ const ArchiveView = ({ onRestore }) => {
 
   const confirmDonation = () => {
     if (selectedForDonation.length === 0) {
-      // Show the new custom ErrorModal instead of alert()
       setErrorMessage("Please select at least one item to donate.");
       setShowErrorModal(true);
       return;
@@ -329,39 +312,30 @@ const ArchiveView = ({ onRestore }) => {
   };
 
   const processDonation = async () => {
-    const donationCount = selectedForDonation.length; // Capture count before clearing
+    const donationCount = selectedForDonation.length;
     try {
-      // 1. Close confirmation modal
       setShowDonationModal(false);
 
-      // 2. Perform the database RPC call
       const { error } = await supabase.rpc("mark_items_for_donation", {
         item_ids: selectedForDonation,
       });
 
       if (error) throw error;
 
-      // 3. Update state for success
       setDonatedItemCount(donationCount);
-      setShowDonationSuccessModal(true); // Show the new success modal
+      setShowDonationSuccessModal(true);
 
-      // 4. Reset UI state
       setBulkMode(false);
       setSelectedForDonation([]);
 
-      // 5. Refresh the list to show items in the 'Donated' tab
       await fetchAllItems();
     } catch (error) {
-      // Use the custom error modal for failure
       setErrorMessage("Donation process failed: " + error.message);
       setShowErrorModal(true);
-      
-      // Reset state in case of failure
       setBulkMode(false);
       setSelectedForDonation([]);
     }
   };
-
 
   return (
     <div className="archive-container">
@@ -398,8 +372,8 @@ const ArchiveView = ({ onRestore }) => {
           Donated ({archivedItems.filter((i) => i.archive_reason === "donate").length})
         </button>
 
-        {/* Bulk controls are now only displayed for the 'expired' (Overdue) tab */}
-        {filter === "expired" && ( 
+        {/* UPDATED: Bulk controls now displayed for both Overdue and Unsolved tabs */}
+        {(filter === "expired" || filter === "unsolved") && ( 
           <div className="bulk-controls">
             <button className="donation-bulk-btn" onClick={toggleBulkMode}>
               {bulkMode ? "Cancel Selection" : "Select Items for Donation"}
@@ -547,7 +521,7 @@ const ArchiveView = ({ onRestore }) => {
         />
       )}
       
-      {/* NEW: ERROR/WARNING MODAL */}
+      {/* ERROR/WARNING MODAL */}
       {showErrorModal && (
         <ErrorModal
           title="Action Required"
@@ -556,7 +530,7 @@ const ArchiveView = ({ onRestore }) => {
         />
       )}
 
-      {/* RESTORE CONFIRMATION MODAL (Scoped Classes) */}
+      {/* RESTORE CONFIRMATION MODAL */}
       {showRestoreModal && itemToRestore && (
         <div className="archive-modal-overlay" onClick={handleCancelRestore}>
           <div

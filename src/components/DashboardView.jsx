@@ -1,5 +1,5 @@
 import React from 'react'; // <-- Removed useState and useEffect
-import './AdminDashboard.css';
+import '../styles/AdminDashboard.css';
 
 // --- COMPONENT NOW ACCEPTS 'stats' AS A PROP ---
 const DashboardView = ({ stats }) => {

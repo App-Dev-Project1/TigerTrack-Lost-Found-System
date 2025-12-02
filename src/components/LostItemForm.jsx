@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Form, Modal, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import tigerLogo from '../assets/tiger.png';
-import './LostItemForm.css';
+import '../styles/LostItemForm.css';
 
 const LostItemForm = () => {
   const navigate = useNavigate();

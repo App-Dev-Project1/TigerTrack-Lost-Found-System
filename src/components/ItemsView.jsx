@@ -11,7 +11,7 @@ import {
   Trash2,
   CheckCircle,
 } from "lucide-react";
-import "./ItemsView.css";
+import "../styles/ItemsView.css";
 
 const ItemsView = ({
   initialLostItems,

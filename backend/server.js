@@ -21,12 +21,14 @@ const authRoutes = require('./routes/authRoutes');
 const lostItemRoutes = require('./routes/lostItemRoutes');
 const foundItemRoutes = require('./routes/foundItemRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const itemRoutes = require('./routes/itemRoutes'); // <--- NEW IMPORT
 
 // --- Register Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/lost', lostItemRoutes);
 app.use('/api/found', foundItemRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/items', itemRoutes); // <--- NEW ROUTE
 
 // Root Test
 app.get('/', (req, res) => {
@@ -36,7 +38,8 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       lost: '/api/lost',
       found: '/api/found',
-      dashboard: '/api/dashboard'
+      dashboard: '/api/dashboard',
+      items: '/api/items'
     }
   });
 });

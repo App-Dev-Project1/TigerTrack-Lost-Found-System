@@ -1,5 +1,5 @@
 import React from 'react';
-import './DisputeView.css';
+import '../styles/DisputeView.css';
 
 const DisputeView = () => {
   return (
